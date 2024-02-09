@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+    app:
+        container_name: ceerma-reliability
+        image: python:3.9
+        restart: unless-stopped
+        command: bash -c "pip install -r requirements.txt && streamlit run index.py"
+        working_dir: '/app'
+        expose:
+            - 8501
+        volumes:
+            - ./:/app
