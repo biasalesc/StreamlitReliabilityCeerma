@@ -1,5 +1,6 @@
 import streamlit as st
 from PIL import Image
+import authenticator
 
 import functions
 import show_parametricmodel , show_parametricmix, show_otherfunc, \
@@ -7,6 +8,21 @@ import show_parametricmodel , show_parametricmix, show_otherfunc, \
 
 from __init__ import __version__
 
+authorized = False
+
+params = st.experimental_get_query_params()
+token = params.get("token")
+if token != None:
+    token = token[0]
+
+if token != None:
+    token_data = authenticator.validate_token(token)
+    if token_data != None:
+        authorized = True
+
+if authorized != True:
+    st.error("Acesso não autorizado. Favor fazer login em https://ceerma.com.br")
+    st.stop()
 
 image_ufpe = Image.open('./src/logo.png')
 image_pip = Image.open('./src/logopip.png')
