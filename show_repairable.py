@@ -6,6 +6,8 @@ import scipy.stats as ss
 from scipy import integrate
 from reliability.Utils import colorprint, round_to_decimals
 from scipy.optimize import curve_fit
+from reliability.Repairable_systems import MCF_parametric as MCF_parametric_2
+from reliability.Repairable_systems import MCF_nonparametric as MCF_nonparametric_2
 
 import functions
 
@@ -765,7 +767,7 @@ class MCF_nonparametric:
         states = np.hstack([F_array, C_array])
         data = {"times": times, "states": states}
         df = pd.DataFrame(
-            data, columns=["times", "states"], use_container_width=True
+            data, columns=["times", "states"]
         )
         # Sorts the df by times and then by states
         # This ensures that states are F then C where the same time occurs
@@ -878,7 +880,6 @@ class MCF_nonparametric:
                 "MCF_upper",
                 "variance"
             ],
-            use_container_width=True,
         )
 
         indices_to_drop = printable_results[
@@ -1130,7 +1131,6 @@ class MCF_parametric:
                 "Lower CI",
                 "Upper CI",
             ],
-            use_container_width=True,
         )
 
         if print_results is True:
@@ -1399,8 +1399,7 @@ def show():
             data = pd.read_excel(uploaded_file)
             if df.shape[1] == 1:
                 col2_2.dataframe(data, use_container_width=True)
-                for col in data.columns:
-                    times = np.cumsum(data[col].to_numpy())
+                times = data.iloc[:,0].to_list()
             else:
                 st.warning('Check the data format.')
 
@@ -1424,7 +1423,7 @@ def show():
             and mtbf is not None:
             reliability_growth(times=times,target_MTBF=mtbf,
                                label='Reliability growth curve',xmax=500000)
-        elif mod == 'ROCOF' and data is not None:
+        elif mod == 'Rate of occurrence of failures (ROCOF)' and data is not None:
             ROCOF(times_between_failures=times, test_end=censored, CI=ci)
         elif mod == 'Mean cumulative function (MCF)':
             if parametric == 'Yes':
