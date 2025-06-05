@@ -5,7 +5,7 @@ import functions
 import show_parametricmodel , show_parametricmix, show_otherfunc, \
     show_repairable, show_alt, show_fitter, show_rdt, show_sndiagram, \
     show_palmgrenminer, show_fracturemechanics, show_creep, \
-    show_accelerationfactor
+    show_accelerationfactor, show_alt_plot
 
 
 from __init__ import __version__
@@ -67,11 +67,17 @@ submodules_physics = {
     "Acceleration Factor": show_accelerationfactor.show,
 }
 
+submodules_alt = {
+    "Select a submodule": lambda: None,
+    "Probability Plotting": show_alt_plot.show,
+    "MLE": show_alt.show,
+}
+
 modules = {
     "Select a module": lambda: None,
     "Parametric Models": submodules_parametric,
-    "Fit Distribution": show_fitter.show,
-    "Accelerated Life Testing": show_alt.show,
+    "Fit Distribution": show_fitter,
+    "Accelerated Life Testing": submodules_alt,
     "Reliability Demonstration Tests": show_rdt.show,
     "Repairable Systems": show_repairable.show,
     # "Other Functions"
