@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from io import StringIO
+from io import StringIO, BytesIO
 import contextlib
 import functions
 import distributions
@@ -25,6 +25,50 @@ LIFELINES_MODELS = {
     "LogNormal AFT": LogNormalAFTFitter,
     "LogLogistic AFT": LogLogisticAFTFitter,
 }
+
+def create_right_censored_excel_example():
+    """Cria um arquivo Excel de exemplo para dados censurados à direita."""
+    data = {
+        'Time': [620, 632, 685, 822, 380, 416, 460, 596, 216, 146, 332, 400],
+        'Type': ['F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F'],
+        'Stress1': [348, 348, 348, 348, 348, 348, 348, 348, 378, 378, 378, 378],
+        'Stress2': [3, 3, 3, 3, 5, 5, 5, 5, 3, 3, 3, 3],
+    }
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='ALT_Data')
+    return output.getvalue()
+
+def create_left_censored_excel_example():
+    """Cria um arquivo Excel de exemplo para dados censurados à esquerda."""
+    data = {
+        'Time': [620, 632, 50, 822, 380, 100, 460, 596, 30, 146, 332, 400],
+        'Type': ['F', 'F', 'L', 'C', 'F', 'L', 'F', 'C', 'L', 'F', 'F', 'F'],
+        'Stress1': [348, 348, 348, 348, 348, 348, 348, 348, 378, 378, 378, 378],
+        'Stress2': [3, 3, 3, 3, 5, 5, 5, 5, 3, 3, 3, 3],
+    }
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='ALT_Data')
+    return output.getvalue()
+
+def create_interval_censored_excel_example():
+    """Cria um arquivo Excel de exemplo para dados com censura por intervalo."""
+    data = {
+        'Time_Lower': [100, 200, pd.NA, 50, 150, 0, 500],
+        'Time_Upper': [100, pd.NA, 50, 70, np.inf, 20, 500],
+        'Event': [1, 0, 1, 1, 0, 1, 1],
+        'Stress1': [348, 348, 348, 348, 350, 350, 355],
+        'Stress2': [3, 3, 3, 3, 5, 5, 3],
+    }
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='ALT_Data')
+    return output.getvalue()
+
 # --- Funções Auxiliares ---
 def detect_censoring_from_headers(df_columns):
     """
@@ -88,24 +132,24 @@ def explain_convergence_error():
     or get stuck somewhere that isn't the true bottom.
 
     **Possible reasons for AFT model non-convergence:**
-    *   **Insufficient Data:** Not enough data points, especially distinct failure times,
+    * **Insufficient Data:** Not enough data points, especially distinct failure times,
         to reliably estimate the model's shape and scale.
-    *   **Data Sparsity:** If failures are very spread out or rare.
-    *   **Poor Initial Guesses:** The algorithm starts with an initial guess for parameters;
+    * **Data Sparsity:** If failures are very spread out or rare.
+    * **Poor Initial Guesses:** The algorithm starts with an initial guess for parameters;
         if this guess is too far off, it might not find its way to a good solution.
-    *   **Flat Likelihood Surface:** The "landscape" the algorithm is searching might be
+    * **Flat Likelihood Surface:** The "landscape" the algorithm is searching might be
         very flat, meaning many different parameter sets give almost equally good fits,
         making it hard to pick one.
-    *   **Collinearity (if using stress variables):** If stress variables are highly
+    * **Collinearity (if using stress variables):** If stress variables are highly
         correlated, their individual effects are hard to disentangle.
-    *   **Model Misspecification:** The chosen distribution (e.g., Weibull, LogNormal)
+    * **Model Misspecification:** The chosen distribution (e.g., Weibull, LogNormal)
         might be a very poor fit for the actual underlying failure process.
 
     **What to do?**
-    *   Ensure your data is clean and correctly formatted.
-    *   Try a different AFT distribution if one fails.
-    *   If using stress variables, check for high correlations.
-    *   More data or data with more precise failure times often helps.
+    * Ensure your data is clean and correctly formatted.
+    * Try a different AFT distribution if one fails.
+    * If using stress variables, check for high correlations.
+    * More data or data with more precise failure times often helps.
     """)
 
 def show():
@@ -125,12 +169,12 @@ def show():
         st.markdown("""
         **Use Case:** You know the exact time of failure, or you know that a unit was still working at a certain time (right-censored).
         **Required Columns (case-insensitive, spaces/underscores flexible):**
-        *   `Time`: The failure time or the time of right-censoring.
-        *   `Type`:
-            *   `'F'` for an observed Failure.
-            *   `'C'` for a Right-Censored observation.
-        *   `Stress1`: The level of the primary stress factor.
-        *   `Stress2` (Optional): The level of a second stress factor.
+        * `Time`: The failure time or the time of right-censoring.
+        * `Type`:
+            * `'F'` for an observed Failure.
+            * `'C'` for a Right-Censored observation.
+        * `Stress1`: The level of the primary stress factor.
+        * `Stress2` (Optional): The level of a second stress factor.
         **Analysis Library:** Custom `reliability` library.
         """)
         st.write("Example Excel Structure for Complete and Left Censored Data:")
@@ -142,6 +186,12 @@ def show():
         }
         df_show = pd.DataFrame.from_dict(df_show)
         st.write(df_show)
+        st.download_button(
+            label="Download Example Excel File",
+            data=create_right_censored_excel_example(),
+            file_name="alt_right_censored_example.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         st.info('The use level stress parameter is optional. \
                 If single stress model, enter only one value. For example:')
         st.write('323')
@@ -153,13 +203,13 @@ def show():
         st.markdown("""
         **Use Case:** You know that a failure occurred *before* a certain inspection time, but not exactly when. Also handles exact failures and right-censored data.
         **Required Columns (case-insensitive, spaces/underscores flexible):**
-        *   `Time`: The inspection time (for left/right censored) or exact failure time.
-        *   `Type`:
-            *   `'F'` for an observed Failure.
-            *   `'C'` for a Right-Censored observation.
-            *   `'L'` for a Left-Censored observation (event occurred *before* `Time`).
-        *   `Stress1`: The level of the primary stress factor.
-        *   `Stress2` (Optional): The level of a second stress factor.
+        * `Time`: The inspection time (for left/right censored) or exact failure time.
+        * `Type`:
+            * `'F'` for an observed Failure.
+            * `'C'` for a Right-Censored observation.
+            * `'L'` for a Left-Censored observation (event occurred *before* `Time`).
+        * `Stress1`: The level of the primary stress factor.
+        * `Stress2` (Optional): The level of a second stress factor.
         **Analysis Library:** `lifelines`.
         """)
         st.write("Example Excel Structure for Left Censored Data:")
@@ -171,6 +221,12 @@ def show():
         }
         df_show = pd.DataFrame(df_show_dict)
         st.write(df_show)
+        st.download_button(
+            label="Download Example Excel File",
+            data=create_left_censored_excel_example(),
+            file_name="alt_left_censored_example.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         st.info('The use level stress parameter is optional. \
                 If single stress model, enter only one value (e.g., `323`). \
                 If dual stress model, enter two values separated by ";" (e.g., `323; 2`).')
@@ -179,13 +235,13 @@ def show():
         st.markdown("""
         **Use Case:** You know that a failure occurred within a specific time interval $[T_{lower}, T_{upper}]$. This format can also represent exact, left, and right censored data.
         **Required Columns (case-insensitive, spaces/underscores flexible):**
-        *   `Time_Lower` (or `Lower_Bound`): Lower bound of the interval. For left-censored, use 0 or leave blank (will be treated as 0). For right-censored, this is the last observation time.
-        *   `Time_Upper` (or `Upper_Bound`): Upper bound of the interval. For right-censored, use `inf` or leave blank. For left-censored, this is the inspection time. For exact, `Time_Upper` = `Time_Lower`.
-        *   `Event`:
-            *   `1`: If the event is observed within the interval (exact, left, or true interval).
-            *   `0`: If the observation is right-censored (event NOT observed by `Time_Lower`).
-        *   `Stress1`: The level of the primary stress factor.
-        *   `Stress2` (Optional): The level of a second stress factor.
+        * `Time_Lower` (or `Lower_Bound`): Lower bound of the interval. For left-censored, use 0 or leave blank (will be treated as 0). For right-censored, this is the last observation time.
+        * `Time_Upper` (or `Upper_Bound`): Upper bound of the interval. For right-censored, use `inf` or leave blank. For left-censored, this is the inspection time. For exact, `Time_Upper` = `Time_Lower`.
+        * `Event`:
+            * `1`: If the event is observed within the interval (exact, left, or true interval).
+            * `0`: If the observation is right-censored (event NOT observed by `Time_Lower`).
+        * `Stress1`: The level of the primary stress factor.
+        * `Stress2` (Optional): The level of a second stress factor.
         **Analysis Library:** `lifelines`.
         """)
         st.write("Interpreting `Time_Lower`, `Time_Upper`, `Event` for Interval Censoring:")
@@ -206,6 +262,12 @@ def show():
         df_show_interval = pd.DataFrame(df_show_dict_interval)
         st.write("Example DataFrame Structure (User Input):")
         st.dataframe(df_show_interval)
+        st.download_button(
+            label="Download Example Excel File",
+            data=create_interval_censored_excel_example(),
+            file_name="alt_interval_censored_example.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         st.info("""
         - Blank/NaN cells in `Time_Lower` will be treated as 0.
         - Blank/NaN cells in `Time_Upper` (when `Event=0`) will be treated as `numpy.inf`.
@@ -248,7 +310,7 @@ def show():
                         st.success("Final Detected Censoring Type: **Left Censored** ")
                     else:
                         st.session_state.final_censoring_type = "right"
-                        st.success("Final Detected Censoring Type: **Right Censored**")
+                        st.success("Final Detected Censoring Type: **Right Censored or No cesored data**")
                 else:
                     st.session_state.final_censoring_type = "unknown_time_type_format_error"
                     st.error("Error: 'Time/Type' format indicated, but 'Type' column could not be reliably processed.")
@@ -395,231 +457,231 @@ def show():
             if not uploaded_file:
                 st.error('Please upload a file first!')
                 st.stop()
-
-            terminal_buffer = StringIO()
-            print_results = False
-            probability_plot = True
-            life_stress_plot = True
-
-            if dual:
-                function_parameters = [
-                    ftime, fstress_1, fstress_2, ctime, cstress_1, cstress_2,
-                    use_level, ic, method,
-                    probability_plot, life_stress_plot, print_results
-                ]
-            else:
-                function_parameters = [
-                    ftime, fstress_1, ctime, cstress_1,
-                    use_level[0], ic, method,
-                    probability_plot, life_stress_plot, print_results
-                ]
-
-            best_BIC, best_AICc, best_loglik = np.inf, np.inf, np.inf
-            results = pd.DataFrame(
-                columns=[
-                    "ALT_model",
-                    "a",
-                    "b",
-                    "c",
-                    "n",
-                    "beta",
-                    "sigma",
-                    "Log-LH",
-                    "AICc",
-                    "BIC",
-                ],
-            )
-            model_warnings = {}
-            def capture_terminal_warnings():
-                output = terminal_buffer.getvalue()
-                warnings = []
-                for line in output.split('\n'):
-                    if "WARNING:" in line and ("MLE estimates failed" in line or "least squares estimates" in line):
-                        clean_line = line.replace('WARNING: ', '').strip()
-                        model_name = clean_line.split('for ')[1].split('.')[0].strip()
-                        message = clean_line.split('. ')[1].strip()
-                        warnings.append((model_name, message))
-                return warnings
-            with contextlib.redirect_stderr(terminal_buffer), \
-                contextlib.redirect_stdout(terminal_buffer):
-                
-                for item in include:
-                    try:
-                        res = distr[item](*function_parameters)
-                        
-                    except Exception as e:
-                        model_warnings[item] = f"Erro crítico: {str(e)}"
-                        continue
-
-            terminal_warnings = capture_terminal_warnings()
             
-            for model, message in terminal_warnings:
-                model_warnings[model] = message
+            with st.spinner('Fitting models...'):
+                terminal_buffer = StringIO()
+                print_results = False
+                probability_plot = True
+                life_stress_plot = True
 
-        
-            for item in include:
-                
-                res = distr[item](*function_parameters)
+                if dual:
+                    function_parameters = [
+                        ftime, fstress_1, fstress_2, ctime, cstress_1, cstress_2,
+                        use_level, ic, method,
+                        probability_plot, life_stress_plot, print_results
+                    ]
+                else:
+                    function_parameters = [
+                        ftime, fstress_1, ctime, cstress_1,
+                        use_level[0] if use_level else None, ic, method,
+                        probability_plot, life_stress_plot, print_results
+                    ]
 
-                        
-                results = results.append(
-                    {
-                        "ALT_model": item,
-                        "a": f'{res.a:.4f}' if 'a' in dir(res) else '',
-                        "b": f'{res.b:.4f}' if 'b' in dir(res) else '',
-                        "c": f'{res.c:.4f}' if 'c' in dir(res) else '',
-                        "n": f'{res.n:.4f}' if 'n' in dir(res) else '',
-                        "beta": f'{res.beta:.4f}' if 'beta' in dir(res) else '',
-                        "sigma": f'{res.sigma:.4f}' if 'sigma' in dir(res) else '',
-                        "Log-LH": f'{res.loglik:.4f}',
-                        "AICc": f'{res.AICc:.4f}',
-                        "BIC": f'{res.BIC:.4f}',
-                    },
-                    ignore_index=True,
+                best_BIC, best_AICc, best_loglik = np.inf, np.inf, np.inf
+                results = pd.DataFrame(
+                    columns=[
+                        "ALT_model",
+                        "a",
+                        "b",
+                        "c",
+                        "n",
+                        "beta",
+                        "sigma",
+                        "Log-LH",
+                        "AICc",
+                        "BIC",
+                    ],
                 )
-                if (res.BIC < best_BIC and metric == 'BIC') or \
-                (res.AICc < best_AICc and metric == 'AICc') or \
-                (-res.loglik < best_loglik and metric == 'Log-likelihood'):
-                    best_BIC = res.BIC
-                    best_AICc = res.AICc
-                    best_loglik = -res.loglik
-                    best_model = res
-                    best_model_name = item
+                model_warnings = {}
+                def capture_terminal_warnings():
+                    output = terminal_buffer.getvalue()
+                    warnings = []
+                    for line in output.split('\n'):
+                        if "WARNING:" in line and ("MLE estimates failed" in line or "least squares estimates" in line):
+                            clean_line = line.replace('WARNING: ', '').strip()
+                            model_name = clean_line.split('for ')[1].split('.')[0].strip()
+                            message = clean_line.split('. ')[1].strip()
+                            warnings.append((model_name, message))
+                    return warnings
+                with contextlib.redirect_stderr(terminal_buffer), \
+                    contextlib.redirect_stdout(terminal_buffer):
+                    
+                    for item in include:
+                        try:
+                            res = distr[item](*function_parameters)
+                            
+                        except Exception as e:
+                            model_warnings[item] = f"Erro crítico: {str(e)}"
+                            continue
 
-            st.write('## Results of all fitted ALT models')
-            results = pd.DataFrame.from_dict(results)
-            st.write(results)
-
-            if model_warnings:
-                st.warning("**Warning - Suboptimal Results Detected**")
-                for model, message in model_warnings.items():
-                    st.markdown(f"""
-                    ⚠️ **Model {model.replace('_', ' ').title()}**
-                    🔍 *Problem detected:*
-                    {message}
-
-                    💡 *Implications:*
-                    The results were obtained with alternative methods (least squares)
-                    and may be less accurate than the standard MLE method.
-                    """)
-                st.write("---")
-
-            st.write('## Results of the best fitted ALT model')
-            st.write(f'The best model are: **{best_model_name}**')
-            st.write(best_model.results)
-            probability_plot = best_model.probability_plot.figure
-            life_stress_plot = best_model.life_stress_plot.figure
-
-            col1, col2 = st.columns(2)
-            col1.write(probability_plot)
-            col2.write(life_stress_plot)
+                terminal_warnings = capture_terminal_warnings()
+                
+                for model, message in terminal_warnings:
+                    model_warnings[model] = message
 
             
-                        
-            if use_level:
-                if hasattr(best_model, 'change_of_parameters') and 'acceleration factor' in best_model.change_of_parameters.columns:
-                    st.subheader("Acceleration Factor Analysis")
+                for item in include:
                     
-                    change_df = best_model.change_of_parameters.copy()
-                    if pd.api.types.is_string_dtype(change_df['acceleration factor']):
-                        change_df['acceleration factor'] = pd.to_numeric(change_df['acceleration factor'], errors='coerce')
-                    change_df.dropna(subset=['acceleration factor'], inplace=True)
+                    res = distr[item](*function_parameters)
 
-                    if not change_df.empty:
-                    
-                        stress_cols_in_df = [col for col in change_df.columns if 'stress' in col.lower() and 'life-stress model' not in col.lower() and 'at use stress' not in col.lower()]
-                        
-                        if not stress_cols_in_df and 'stress' in change_df.columns: 
-                            stress_cols_in_df = ['stress']
-                        elif not stress_cols_in_df: # 
-                            st.caption("Could not identify stress column(s) in DataFrame 'change_of_parameters' for detailed display.")
-
-                        cols_to_display = stress_cols_in_df + ['acceleration factor']
-                        
-                       
-                        valid_cols_to_display = [col for col in cols_to_display if col in change_df.columns]
-
-                        if valid_cols_to_display:
-                            st.write("Acceleration Factors by Stress Level:")
-                            st.dataframe(change_df[valid_cols_to_display].style.format({'acceleration factor': "{:.2f}x"}))
-                        else:
-                            st.write("Acceleration Factors (stress columns not found for drillthrough):")
-                            st.dataframe(change_df[['acceleration factor']].style.format({'acceleration factor': "{:.2f}x"}))
-
-                        metrics_data = []
-
-                        avg_accel = change_df['acceleration factor'].mean()
-                        metrics_data.append({"Metric": "Average Acceleration Factor", "Value": f"{avg_accel:.2f}x"})
-
-                        
-                        if not change_df['acceleration factor'].empty:
-                            max_accel_factor = change_df['acceleration factor'].max()
-                            stress_at_max_accel_series = change_df.loc[change_df['acceleration factor'].idxmax(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
                             
-                      
-                            if not stress_at_max_accel_series.empty:
-                                stress_at_max_accel_str = '; '.join(stress_at_max_accel_series.astype(str))
-                                metrics_data.append({
-                                "Metric": "Largest Acceleration Factor",
-                                "Value": f"{max_accel_factor:.2f}x (at stress: {stress_at_max_accel_str})"
-                                })
-                            else:
-                                metrics_data.append({
-                                "Metric": "Largest Acceleration Factor",
-                                "Value": f"{max_accel_factor:.2f}x"
-                                })
+                    results = results.append(
+                        {
+                            "ALT_model": item,
+                            "a": f'{res.a:.4f}' if 'a' in dir(res) else '',
+                            "b": f'{res.b:.4f}' if 'b' in dir(res) else '',
+                            "c": f'{res.c:.4f}' if 'c' in dir(res) else '',
+                            "n": f'{res.n:.4f}' if 'n' in dir(res) else '',
+                            "beta": f'{res.beta:.4f}' if 'beta' in dir(res) else '',
+                            "sigma": f'{res.sigma:.4f}' if 'sigma' in dir(res) else '',
+                            "Log-LH": f'{res.loglik:.4f}',
+                            "AICc": f'{res.AICc:.4f}',
+                            "BIC": f'{res.BIC:.4f}',
+                        },
+                        ignore_index=True,
+                    )
+                    if (res.BIC < best_BIC and metric == 'BIC') or \
+                    (res.AICc < best_AICc and metric == 'AICc') or \
+                    (-res.loglik < best_loglik and metric == 'Log-likelihood'):
+                        best_BIC = res.BIC
+                        best_AICc = res.AICc
+                        best_loglik = -res.loglik
+                        best_model = res
+                        best_model_name = item
 
+                st.write('## Results of all fitted ALT models')
+                results = pd.DataFrame.from_dict(results)
+                st.write(results)
 
-                        if not change_df['acceleration factor'].empty:
-                            min_accel_factor = change_df['acceleration factor'].min()
-                            stress_at_min_accel_series = change_df.loc[change_df['acceleration factor'].idxmin(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
+                if model_warnings:
+                    st.warning("**Warning - Suboptimal Results Detected**")
+                    for model, message in model_warnings.items():
+                        st.markdown(f"""
+                        ⚠️ **Model {model.replace('_', ' ').title()}**
+                        🔍 *Problem detected:*
+                        {message}
+
+                        💡 *Implications:*
+                        The results were obtained with alternative methods (least squares)
+                        and may be less accurate than the standard MLE method.
+                        """)
+                    st.write("---")
+
+                st.write('## Results of the best fitted ALT model')
+                st.write(f'The best model are: **{best_model_name}**')
+                st.write(best_model.results)
+                probability_plot = best_model.probability_plot.figure
+                life_stress_plot = best_model.life_stress_plot.figure
+
+                col1, col2 = st.columns(2)
+                col1.write(probability_plot)
+                col2.write(life_stress_plot)
                             
-                            if not stress_at_min_accel_series.empty:
-                                stress_at_min_accel_str = '; '.join(stress_at_min_accel_series.astype(str))
-                                metrics_data.append({
-                                "Metric": "Lowest Acceleration Factor",
-                                "Value": f"{min_accel_factor:.2f}x (at stress: {stress_at_min_accel_str})"
-                                })
-                            else:
-                                metrics_data.append({
-                                "Metric": "Lowest Acceleration Factor",
-                                "Value": f"{min_accel_factor:.2f}x"
-                                })
+                if use_level and hasattr(best_model, 'mean_life'):
+                    st.write('# Use level analysis')
+                    st.write(f'The mean life at use level {use_level} is **{best_model.mean_life:.4f}** time units.')
 
-                        num_stress_levels = len(change_df) 
-                        metrics_data.append({"Metric": "Number of Stress Levels with Acceleration Factor", "Value": num_stress_levels})
-
-                        if metrics_data:
-                            st.write("Summary of Acceleration Factor Metrics:")
-                            metrics_df = pd.DataFrame(metrics_data)
-                            st.table(metrics_df.set_index("Metric"))
-
-                        else:
-                            st.info("There is no valid acceleration factor data for quantitative analysis.")
-
-                    elif hasattr(best_model, 'change_of_parameters'):
-                        st.info("The 'acceleration factor' column was not found in the 'change_of_parameters' DataFrame. Acceleration factor analysis is not available.")
-
-
-                st.write('# Use level analysis')
-                st.write(f'The mean life at use level {use_level} is **{best_model.mean_life:.4f}** time units.')
-                
-                if hasattr(best_model, 'distribution_at_use_stress'):
-                    st.write(f"""
-                    #### Distribution at Use Stress Level
-                    Characteristics of the best distribution at use conditions:
-                    """)
                     
-                    dist = best_model.distribution_at_use_stress
-                    try:
-                        plot_params = functions.plot_parameters()
-                        functions.plot_distribution(
-                                dist,
-                                plot_params,
-                                title=dist.param_title_long
-                            )
-                    except Exception as e:
-                        st.warning(f"Could not plot distribution: {str(e)}")
+                    # if hasattr(best_model, 'change_of_parameters') and 'acceleration factor' in best_model.change_of_parameters.columns:
+                    #     st.subheader("Acceleration Factor Analysis")
+                        
+                    #     change_df = best_model.change_of_parameters.copy()
+                    #     if pd.api.types.is_string_dtype(change_df['acceleration factor']):
+                    #         change_df['acceleration factor'] = pd.to_numeric(change_df['acceleration factor'], errors='coerce')
+                    #     change_df.dropna(subset=['acceleration factor'], inplace=True)
+
+                    #     if not change_df.empty:
+                        
+                    #         stress_cols_in_df = [col for col in change_df.columns if 'stress' in col.lower() and 'life-stress model' not in col.lower() and 'at use stress' not in col.lower()]
+                            
+                    #         if not stress_cols_in_df and 'stress' in change_df.columns: 
+                    #             stress_cols_in_df = ['stress']
+                    #         elif not stress_cols_in_df: # 
+                    #             st.caption("Could not identify stress column(s) in DataFrame 'change_of_parameters' for detailed display.")
+
+                    #         cols_to_display = stress_cols_in_df + ['acceleration factor']
+                            
+                        
+                    #         valid_cols_to_display = [col for col in cols_to_display if col in change_df.columns]
+
+                    #         if valid_cols_to_display:
+                    #             st.write("Acceleration Factors by Stress Level:")
+                    #             st.dataframe(change_df[valid_cols_to_display].style.format({'acceleration factor': "{:.2f}x"}))
+                    #         else:
+                    #             st.write("Acceleration Factors (stress columns not found for drillthrough):")
+                    #             st.dataframe(change_df[['acceleration factor']].style.format({'acceleration factor': "{:.2f}x"}))
+
+                    #         metrics_data = []
+
+                    #         avg_accel = change_df['acceleration factor'].mean()
+                    #         metrics_data.append({"Metric": "Average Acceleration Factor", "Value": f"{avg_accel:.2f}x"})
+
+                            
+                    #         if not change_df['acceleration factor'].empty:
+                    #             max_accel_factor = change_df['acceleration factor'].max()
+                    #             stress_at_max_accel_series = change_df.loc[change_df['acceleration factor'].idxmax(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
+                                
+                        
+                    #             if not stress_at_max_accel_series.empty:
+                    #                 stress_at_max_accel_str = '; '.join(stress_at_max_accel_series.astype(str))
+                    #                 metrics_data.append({
+                    #                 "Metric": "Largest Acceleration Factor",
+                    #                 "Value": f"{max_accel_factor:.2f}x (at stress: {stress_at_max_accel_str})"
+                    #                 })
+                    #             else:
+                    #                 metrics_data.append({
+                    #                 "Metric": "Largest Acceleration Factor",
+                    #                 "Value": f"{max_accel_factor:.2f}x"
+                    #                 })
+
+
+                    #         if not change_df['acceleration factor'].empty:
+                    #             min_accel_factor = change_df['acceleration factor'].min()
+                    #             stress_at_min_accel_series = change_df.loc[change_df['acceleration factor'].idxmin(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
+                                
+                    #             if not stress_at_min_accel_series.empty:
+                    #                 stress_at_min_accel_str = '; '.join(stress_at_min_accel_series.astype(str))
+                    #                 metrics_data.append({
+                    #                 "Metric": "Lowest Acceleration Factor",
+                    #                 "Value": f"{min_accel_factor:.2f}x (at stress: {stress_at_min_accel_str})"
+                    #                 })
+                    #             else:
+                    #                 metrics_data.append({
+                    #                 "Metric": "Lowest Acceleration Factor",
+                    #                 "Value": f"{min_accel_factor:.2f}x"
+                    #                 })
+
+                    #         num_stress_levels = len(change_df) 
+                    #         metrics_data.append({"Metric": "Number of Stress Levels with Acceleration Factor", "Value": num_stress_levels})
+
+                    #         if metrics_data:
+                    #             st.write("Summary of Acceleration Factor Metrics:")
+                    #             metrics_df = pd.DataFrame(metrics_data)
+                    #             st.table(metrics_df.set_index("Metric"))
+
+                    #         else:
+                    #             st.info("There is no valid acceleration factor data for quantitative analysis.")
+
+                    #     elif hasattr(best_model, 'change_of_parameters'):
+                    #         st.info("The 'acceleration factor' column was not found in the 'change_of_parameters' DataFrame. Acceleration factor analysis is not available.")
+        
+                    if hasattr(best_model, 'distribution_at_use_stress'):
+                        st.write(f"""
+                        #### Distribution at Use Stress Level
+                        Characteristics of the best distribution at use conditions:
+                        """)
+                        
+                        dist = best_model.distribution_at_use_stress
+                        try:
+                            plot_params = functions.plot_parameters()
+                            functions.plot_distribution(
+                                    dist,
+                                    plot_params,
+                                    title=dist.param_title_long
+                                )
+                        except Exception as e:
+                            st.warning(f"Could not plot distribution: {str(e)}")
+                    
     
     if st.session_state.final_censoring_type == "left":
         with st.expander('Short Guide'):
@@ -792,206 +854,231 @@ def show():
                 st.error("Please select at least one model to fit.")
                 st.stop()
 
-            st.write("## Fitting Results")
-            
-            all_results_summary = []
-            best_model_instance = None
-            best_model_name = ""
-            best_aic = np.inf
+            with st.spinner('Fitting models...'):
+                st.write("## Fitting Results")
+                
+                all_results_summary = []
+                best_model_instance = None
+                best_model_name = ""
+                best_aic = np.inf
 
-            for model_name in selected_models:
-                st.subheader(f"Model: {model_name}")
-                fitter_class = LIFELINES_MODELS[model_name]
+                for model_name in selected_models:
+                    st.subheader(f"Model: {model_name}")
+                    fitter_class = LIFELINES_MODELS[model_name]
 
-                if model_name == "CoxPH":
-                    fitter = CoxPHFitter(baseline_estimation_method="spline",n_baseline_knots=4)
-                else:
-                    fitter = fitter_class()
+                    if model_name == "CoxPH":
+                        fitter = CoxPHFitter(baseline_estimation_method="spline",n_baseline_knots=4)
+                    else:
+                        fitter = fitter_class()
 
-                try:
-                    if model_name == "Kaplan-Meier":
-                        fitter.fit_left_censoring(df_lifelines['Time'], df_lifelines['Event'])
-                        st.write("Kaplan-Meier fitted on pooled data.")
-                        fig, ax = plt.subplots()
-                        fitter.plot_survival_function(ax=ax)
-                        ax.set_title(f"Kaplan-Meier Survival Function (Left Censored Data)")
-                        st.pyplot(fig)
-                        st.write("Survival function estimates:")
-                        st.dataframe(fitter.survival_function_)
-                        all_results_summary.append({
-                            "Model": model_name, "AIC": "N/A", "Log-Likelihood": "N/A", 
-                            "Converged": "N/A", "Parameters": "N/A (Non-parametric)"
-                        })
-
-                    elif model_name == "CoxPH":
-                        cols_for_cox = ['Time', 'Event'] + stress_cols
-                        df_cox_fit = df_lifelines[cols_for_cox].copy()
-
-                        if not stress_cols:
-                            st.warning("CoxPH: No stress covariates identified. Model will estimate baseline hazard only using spline method.")
-                        
-                        fitter.fit_left_censoring(df_cox_fit, 'Time', 'Event')
-                        
-                        fitter.print_summary(decimals=4)
-                        summary_df = fitter.summary
-                        st.dataframe(summary_df)
-                        
-                        log_lik = fitter.log_likelihood_ if hasattr(fitter, 'log_likelihood_') else 'N/A'
-                        aic_val = fitter.AIC_ if hasattr(fitter, 'AIC_') else 'N/A'
-                        converged = fitter.convergence_flags_['converged'] if hasattr(fitter, 'convergence_flags_') and fitter.convergence_flags_ else 'N/A'
-                        
-                        all_results_summary.append({
-                            "Model": model_name, "AIC": f"{aic_val:.2f}" if isinstance(aic_val, float) else aic_val,
-                            "Log-Likelihood": f"{log_lik:.2f}" if isinstance(log_lik, float) else log_lik,
-                            "Converged": converged, "Parameters": "See Summary Table"
-                        })
-                        if isinstance(aic_val, float) and aic_val < best_aic:
-                            best_aic = aic_val
-                            best_model_instance = fitter
-                            best_model_name = model_name
-
-                        # Plotting for CoxPH
-                        fig, ax = plt.subplots()
-                        if stress_cols and use_level_stresses:
-                            df_use_level_cox = pd.DataFrame([use_level_stresses], columns=stress_cols)
-                            try:
-                                sf_prediction = fitter.predict_survival_function(df_use_level_cox)
-                                sf_prediction.rename(columns={0: f"Use Level: {use_level_stresses}"}).plot(ax=ax)
-                                ax.set_title(f"CoxPH Predicted Survival at Use Level")
-                            except Exception as plot_e:
-                                st.warning(f"Could not plot predicted survival for CoxPH at use level: {plot_e}. Plotting baseline.")
-                                fitter.plot_baseline_survival(ax=ax)
-                                ax.set_title(f"CoxPH Baseline Survival Function")
-                        elif stress_cols: 
-                            X_mean_cox = df_lifelines[stress_cols].mean().to_frame().T
-                            try:
-                                sf_prediction_mean = fitter.predict_survival_function(X_mean_cox)
-                                sf_prediction_mean.rename(columns={0: "Avg Stress"}).plot(ax=ax)
-                                ax.set_title(f"CoxPH Predicted Survival (Avg Stress)")
-                            except Exception as plot_e:
-                                st.warning(f"Could not plot predicted survival for CoxPH at avg stress: {plot_e}. Plotting baseline.")
-                                fitter.plot_baseline_survival(ax=ax)
-                                ax.set_title(f"CoxPH Baseline Survival Function")
-                        else: 
-                            fitter.plot_baseline_survival(ax=ax)
-                            ax.set_title(f"CoxPH Baseline Survival Function")
-                        st.pyplot(fig)
-
-
-                    elif "AFT" in model_name: # WeibullAFT, LogNormalAFT, LogLogisticAFT
-                        df_aft_fit = df_lifelines[['Time', 'Event'] + stress_cols].copy()
-
-                        if not stress_cols:
-                            st.warning(f"{model_name} is typically used with stress covariates. Fitting as a simple distribution (no covariates).")
-                            fitter.fit(df_aft_fit['Time'], event_observed=df_aft_fit['Event'])
-                        else:
-                            formula = " + ".join(stress_cols)
-                            fitter.fit(df_aft_fit, 'Time', 'Event', formula=formula)
-                        
-                        fitter.print_summary(decimals=4)
-                        summary_df = fitter.summary
-                        st.dataframe(summary_df)
-
-                        log_lik = fitter.log_likelihood_
-                        aic_val = fitter.AIC_
-                        converged_status  ='N/A'
-
-                        if hasattr(fitter, '_CONVERGENCE_FLAG_KEY'):
-                            if fitter._CONVERGENCE_FLAG_KEY in fitter.convergence_flags_:
-                                converged_status = fitter.convergence_flags_[fitter._CONVERGENCE_FLAG_KEY]
-                            elif hasattr(fitter, 'params_'):
-                                converged_status = True 
-                        elif hasattr(fitter, 'params_'):
-                            converged_status = True
-
-                        all_results_summary.append({
-                            "Model": model_name, "AIC": f"{aic_val:.2f}",
-                            "Log-Likelihood": f"{log_lik:.2f}",
-                            "Converged": converged_status
-                        })
-
-                        if isinstance(aic_val, (float, int)) and aic_val < best_aic :
-                            best_aic = aic_val
-                            best_model_instance = fitter
-                            best_model_name = model_name
-                        
-                        # Plotting for AFT
-                        fig, ax = plt.subplots()
-                        if stress_cols and use_level_stresses:
-                            df_use_level_aft = pd.DataFrame([use_level_stresses], columns=stress_cols)
-                            fitter.predict_survival_function(df_use_level_aft).rename(columns={0: f"Use Level: {use_level_stresses}"}).plot(ax=ax)
-                            ax.set_title(f"{model_name} Survival Function at Use Level")
-                        elif stress_cols:
-                            X_mean_aft = df_lifelines[stress_cols].mean().to_frame().T
-                            fitter.predict_survival_function(X_mean_aft).rename(columns={0: "Avg Stress"}).plot(ax=ax)
-                            ax.set_title(f"{model_name} Survival Function (Avg Stress)")
-                        else: 
+                    try:
+                        if model_name == "Kaplan-Meier":
+                            fitter.fit_left_censoring(df_lifelines['Time'], df_lifelines['Event'])
+                            st.write("Kaplan-Meier fitted on pooled data.")
+                            fig, ax = plt.subplots()
                             fitter.plot_survival_function(ax=ax)
-                            ax.set_title(f"{model_name} Survival Function (No Covariates)")
-                        st.pyplot(fig)
+                            ax.set_title(f"Kaplan-Meier Survival Function (Left Censored Data)")
+                            st.pyplot(fig)
+                            st.write("Survival function estimates:")
+                            st.dataframe(fitter.survival_function_)
+                            all_results_summary.append({
+                                "Model": model_name, "AIC": "N/A", "Log-Likelihood": "N/A", 
+                                "Converged": "N/A", "Parameters": "N/A (Non-parametric)"
+                            })
 
-                except (ConvergenceError, RuntimeError, ValueError, np.linalg.LinAlgError) as e:
-                    st.error(f"Could not fit {model_name}. Error: {e}")
-                    all_results_summary.append({
-                        "Model": model_name, "AIC": "Error", "Log-Likelihood": "Error",
-                        "Converged": "Error", "Parameters": f"Error: {e}"
-                    })
-                except Exception as e:
-                    st.error(f"An unexpected error occurred while fitting {model_name}: {e}")
-                    all_results_summary.append({
-                        "Model": model_name, "AIC": "Error", "Log-Likelihood": "Error",
-                        "Converged": "Error", "Parameters": f"Error: {e}"
-                    })
+                        elif model_name == "CoxPH":
+                            cols_for_cox = ['Time', 'Event'] + stress_cols
+                            df_cox_fit = df_lifelines[cols_for_cox].copy()
+
+                            if not stress_cols:
+                                st.warning("CoxPH: No stress covariates identified. Model will estimate baseline hazard only using spline method.")
+                            
+                            fitter.fit_left_censoring(df_cox_fit, 'Time', 'Event')
+                            
+                            fitter.print_summary(decimals=4)
+                            summary_df = fitter.summary
+                            st.dataframe(summary_df)
+                            
+                            log_lik = fitter.log_likelihood_ if hasattr(fitter, 'log_likelihood_') else 'N/A'
+                            aic_val = fitter.AIC_ if hasattr(fitter, 'AIC_') else 'N/A'
+                            converged = fitter.convergence_flags_['converged'] if hasattr(fitter, 'convergence_flags_') and fitter.convergence_flags_ else 'N/A'
+                            
+                            all_results_summary.append({
+                                "Model": model_name, "AIC": f"{aic_val:.2f}" if isinstance(aic_val, float) else aic_val,
+                                "Log-Likelihood": f"{log_lik:.2f}" if isinstance(log_lik, float) else log_lik,
+                                "Converged": converged, "Parameters": "See Summary Table"
+                            })
+                            if isinstance(aic_val, float) and aic_val < best_aic:
+                                best_aic = aic_val
+                                best_model_instance = fitter
+                                best_model_name = model_name
+
+                            # Plotting for CoxPH
+                            fig, ax = plt.subplots()
+                            if stress_cols and use_level_stresses:
+                                df_use_level_cox = pd.DataFrame([use_level_stresses], columns=stress_cols)
+                                try:
+                                    sf_prediction = fitter.predict_survival_function(df_use_level_cox)
+                                    sf_prediction.rename(columns={0: f"Use Level: {use_level_stresses}"}).plot(ax=ax)
+                                    ax.set_title(f"CoxPH Predicted Survival at Use Level")
+                                except Exception as plot_e:
+                                    st.warning(f"Could not plot predicted survival for CoxPH at use level: {plot_e}. Plotting baseline.")
+                                    fitter.plot_baseline_survival(ax=ax)
+                                    ax.set_title(f"CoxPH Baseline Survival Function")
+                            elif stress_cols: 
+                                X_mean_cox = df_lifelines[stress_cols].mean().to_frame().T
+                                try:
+                                    sf_prediction_mean = fitter.predict_survival_function(X_mean_cox)
+                                    sf_prediction_mean.rename(columns={0: "Avg Stress"}).plot(ax=ax)
+                                    ax.set_title(f"CoxPH Predicted Survival (Avg Stress)")
+                                except Exception as plot_e:
+                                    st.warning(f"Could not plot predicted survival for CoxPH at avg stress: {plot_e}. Plotting baseline.")
+                                    fitter.plot_baseline_survival(ax=ax)
+                                    ax.set_title(f"CoxPH Baseline Survival Function")
+                            else: 
+                                fitter.plot_baseline_survival(ax=ax)
+                                ax.set_title(f"CoxPH Baseline Survival Function")
+                            st.pyplot(fig)
 
 
-            st.write("## Summary of All Fitted Models")
-            if all_results_summary:
-                results_df = pd.DataFrame(all_results_summary)
-                st.dataframe(results_df)
+                        elif "AFT" in model_name: # WeibullAFT, LogNormalAFT, LogLogisticAFT
+                            df_aft_fit = df_lifelines[['Time', 'Event'] + stress_cols].copy()
 
-                if best_model_instance and best_model_name and best_aic != np.inf :
-                    st.write(f"## Best Model: {best_model_name}")
-                    st.write(f"AIC: {best_aic:.2f}")
-                    st.write("Summary of Best Model:")
-                    st.dataframe(best_model_instance.summary)
+                            if not stress_cols:
+                                st.warning(f"{model_name} is typically used with stress covariates. Fitting as a simple distribution (no covariates).")
+                                fitter.fit(df_aft_fit['Time'], event_observed=df_aft_fit['Event'])
+                            else:
+                                formula = " + ".join(stress_cols)
+                                fitter.fit(df_aft_fit, 'Time', 'Event', formula=formula)
+                            
+                            fitter.print_summary(decimals=4)
+                            summary_df = fitter.summary
+                            st.dataframe(summary_df)
 
-                    if use_level_stresses and hasattr(best_model_instance, 'predict_median') and stress_cols:
-                        if "AFT" in best_model_name or "CoxPH" in best_model_name : 
-                            df_predict_use_level = pd.DataFrame([use_level_stresses], columns=stress_cols)
-                            try:
-                                median_life_prediction = best_model_instance.predict_median(df_predict_use_level)
+                            log_lik = fitter.log_likelihood_
+                            aic_val = fitter.AIC_
+                            converged_status  ='N/A'
 
-                                actual_median_life_value = None
-                                if isinstance(median_life_prediction, (pd.Series, pd.DataFrame)):
-                                    actual_median_life_value = median_life_prediction.iloc[0]
-                                elif isinstance(median_life_prediction, (float, np.float64, int, np.int64)):
-                                    actual_median_life_value = median_life_prediction
-                                else:
-                                    st.warning(f"Unexpected type for median life prediction: {type(median_life_prediction)}")
+                            if hasattr(fitter, '_CONVERGENCE_FLAG_KEY'):
+                                if fitter._CONVERGENCE_FLAG_KEY in fitter.convergence_flags_:
+                                    converged_status = fitter.convergence_flags_[fitter._CONVERGENCE_FLAG_KEY]
+                                elif hasattr(fitter, 'params_'):
+                                    converged_status = True 
+                            elif hasattr(fitter, 'params_'):
+                                converged_status = True
+
+                            all_results_summary.append({
+                                "Model": model_name, "AIC": f"{aic_val:.2f}",
+                                "Log-Likelihood": f"{log_lik:.2f}",
+                                "Converged": converged_status,
+                                "Parameters": "N/A"
+                            })
+
+                            if isinstance(aic_val, (float, int)) and aic_val < best_aic :
+                                best_aic = aic_val
+                                best_model_instance = fitter
+                                best_model_name = model_name
+                            
+                            # Plotting for AFT
+                            fig, ax = plt.subplots()
+                            if stress_cols and use_level_stresses:
+                                df_use_level_aft = pd.DataFrame([use_level_stresses], columns=stress_cols)
+                                fitter.predict_survival_function(df_use_level_aft).rename(columns={0: f"Use Level: {use_level_stresses}"}).plot(ax=ax)
+                                ax.set_title(f"{model_name} Survival Function at Use Level")
+                            elif stress_cols:
+                                X_mean_aft = df_lifelines[stress_cols].mean().to_frame().T
+                                fitter.predict_survival_function(X_mean_aft).rename(columns={0: "Avg Stress"}).plot(ax=ax)
+                                ax.set_title(f"{model_name} Survival Function (Avg Stress)")
+                            else: 
+                                fitter.plot_survival_function(ax=ax)
+                                ax.set_title(f"{model_name} Survival Function (No Covariates)")
+                            st.pyplot(fig)
+
+                    except (ConvergenceError, RuntimeError, ValueError, np.linalg.LinAlgError) as e:
+                        st.error(f"Could not fit {model_name}. Error: {e}")
+                        all_results_summary.append({
+                            "Model": model_name, "AIC": "Error", "Log-Likelihood": "Error",
+                            "Converged": "Error", "Parameters": f"Error: {e}"
+                        })
+                    except Exception as e:
+                        st.error(f"An unexpected error occurred while fitting {model_name}: {e}")
+                        all_results_summary.append({
+                            "Model": model_name, "AIC": "Error", "Log-Likelihood": "Error",
+                            "Converged": "Error", "Parameters": f"Error: {e}"
+                        })
+
+
+                st.write("## Summary of All Fitted Models")
+                if all_results_summary:
+                    results_df = pd.DataFrame(all_results_summary)
+                    #st.dataframe(results_df) ##ERRO AQUI
+                    st.write(all_results_summary)
+                    if best_model_instance and best_model_name and best_aic != np.inf :
+                        st.write(f"## Best Model: {best_model_name}")
+                        #st.write(f"AIC: {best_aic:.2f}")
+                        #st.write("Summary of Best Model:")
+                        #st.dataframe(best_model_instance.summary)
+
+                        if use_level_stresses and hasattr(best_model_instance, 'predict_median') and stress_cols:
+                            if "AFT" in best_model_name or "CoxPH" in best_model_name : 
+                                df_predict_use_level = pd.DataFrame([use_level_stresses], columns=stress_cols)
+                                try:
+                                    median_life_prediction = best_model_instance.predict_median(df_predict_use_level)
+
+                                    actual_median_life_value = None
+                                    if isinstance(median_life_prediction, (pd.Series, pd.DataFrame)):
+                                        actual_median_life_value = median_life_prediction.iloc[0]
+                                    elif isinstance(median_life_prediction, (float, np.float64, int, np.int64)):
+                                        actual_median_life_value = median_life_prediction
+                                    else:
+                                        st.warning(f"Unexpected type for median life prediction: {type(median_life_prediction)}")
+                                    
+                                    if actual_median_life_value is not None:
+                                        st.write(f"Predicted Median Life at Use Level {use_level_stresses}: **{actual_median_life_value:.2f}** time units.")
                                 
-                                if actual_median_life_value is not None:
-                                    st.write(f"Predicted Median Life at Use Level {use_level_stresses}: **{actual_median_life_value:.2f}** time units.")
-                                
-                                st.write("Predicted Survival Function at Use Level:")
-                                fig, ax = plt.subplots()
-                                pred_sf_use = best_model_instance.predict_survival_function(df_predict_use_level)
-                                pred_sf_use.rename(columns={0: f"Use Level: {use_level_stresses}"}).plot(ax=ax)
-                                ax.set_title(f"Predicted Survival for {best_model_name} at Use Level")
-                                st.pyplot(fig)
-                            except Exception as e:
-                                st.warning(f"Could not predict for use level with best model. Error: {e}")
-                    elif use_level_stresses and not stress_cols and hasattr(best_model_instance, 'predict_median'):
-                        st.info("Use level stresses provided, but the best model was fit without stress covariates. Predictions at use level are not applicable in this context for this model.")
+                                except Exception as e:
+                                    st.warning(f"Could not predict for use level with best model. Error: {e}")
+                        elif use_level_stresses and not stress_cols and hasattr(best_model_instance, 'predict_median'):
+                            st.info("Use level stresses provided, but the best model was fit without stress covariates. Predictions at use level are not applicable in this context for this model.")
 
 
-                elif not best_model_name and any("Error" not in r["AIC"] for r in all_results_summary if isinstance(r["AIC"], str)):
-                    st.info("No model was successfully chosen as 'best' based on AIC, possibly due to errors or all models having N/A AIC values.")
+                    elif not best_model_name and any("Error" not in r["AIC"] for r in all_results_summary if isinstance(r["AIC"], str)):
+                        st.info("No model was successfully chosen as 'best' based on AIC, possibly due to errors or all models having N/A AIC values.")
+                    else:
+                        st.warning("No models were successfully fitted or no suitable best model found.")
                 else:
-                    st.warning("No models were successfully fitted or no suitable best model found.")
-            else:
-                st.info("No models were selected or processed.")
+                    st.info("No models were selected or processed.")
     
     if st.session_state.final_censoring_type == "interval":
+        with st.expander('Short Guide'):
+            st.write('When using this module, please take into consideration the following points:')
+            st.info("""
+            - There is no need to sort the data in any particular order.
+            - For AFT models, ensure sufficient data points for model convergence, especially with multiple stress factors.
+            - **Interval-censored data** means the event (e.g., failure) is known to have occurred *between* a lower and an upper time bound.
+            """)
+            st.write("""
+            This module uses `lifelines` for survival analysis with interval-censored data:
+            - **Kaplan-Meier (Turnbull estimator):** A non-parametric method to estimate the survival function from interval-censored data.
+            - **Accelerated Failure Time (AFT) Models (Weibull, LogNormal, LogLogistic):**
+            Parametric models where stresses are assumed to accelerate or decelerate the time to event.
+            """)
+
+        with st.expander("Equation Information"):
+            st.write("#### Kaplan-Meier (Turnbull Estimator)")
+            st.write("""
+            For interval-censored data, the Kaplan-Meier estimator is generalized using the Turnbull algorithm. This is a non-parametric method that computes the Non-Parametric Maximum Likelihood Estimator (NPMLE) of the survival function. It does not assume an underlying distribution for the lifetime but finds a discrete survival function that best fits the observed failure intervals. The algorithm iteratively estimates the survival probabilities over the disjoint intervals derived from the data.
+            """)
+
+            st.write("#### Accelerated Failure Time (AFT) Models")
+            st.write(r"""
+            The general form of an AFT model is:
+            $$ \log(T) = \beta_0 + \beta_1 S_1 + \beta_2 S_2 + \dots + \sigma \epsilon $$
+            For an interval-censored observation $(L, R)$, the contribution to the likelihood function is the probability of the failure occurring within that interval:
+            $$ P(L < T \le R | \mathbf{S}) = P(\log(L) < \log(T) \le \log(R) | \mathbf{S}) $$
+            This is equivalent to $F(\log(R)|\mathbf{S}) - F(\log(L)|\mathbf{S})$, or in terms of the survival function, $S(L|\mathbf{S}) - S(R|\mathbf{S})$, where $S$ is the survival function of the chosen AFT model (e.g., Weibull, LogNormal). The model's parameters are estimated by maximizing the product of these probabilities across all observations.
+            """)
+
         df_lifelines = None
         dual_stress_model = False
         stress_cols = []
@@ -1082,8 +1169,8 @@ def show():
                 st.error("Data Error: DataFrame is empty after initial processing/filtering. Please check your input data.")
                 st.stop()
 
-            st.write("### Processed Data Snippet")
-            st.dataframe(df_lifelines[['Time_Lower', 'Time_Upper', 'Event', 'Event_Turnbull', 'Event_AFT_IntervalCensoring'] + stress_cols].head())
+            #st.write("### Processed Data Snippet")
+            #st.dataframe(df_lifelines[['Time_Lower', 'Time_Upper', 'Event'] + stress_cols].head())
 
 
             st.write("### Raw Interval Data Visualization")
@@ -1101,7 +1188,13 @@ def show():
                 ax_raw.set_title("Visualization of Interval Censored Lifetimes (User 'Event' for color)")
                 st.pyplot(fig_raw)
                 st.caption("""
-                **Interpreting the Interval Plot:** 
+                **Interpreting the Interval Plot:**
+                - Each horizontal line represents an individual unit or observation.
+                - **Red lines (with markers):** Indicate that an event (failure) was observed (`Event=1`).
+                    - A line from one point to another (e.g., `>-----<`) shows an **interval of uncertainty**. The failure occurred at some point between the start and end of the line.
+                    - A solid dot (`●`) at an exact time signifies an **exact failure** (`Time_Lower` == `Time_Upper`).
+                    - A line starting at 0 and ending with a marker at T (`>-----|`) represents **left-censorship** (failure occurred *before* time T).
+                - **Blue lines (without end markers):** Indicate **right-censored** observations (`Event=0`). The event had not occurred by the end of the observation period, which is the right boundary of the line.
                 """)
             except Exception as e:
                 st.warning(f"Could not plot raw interval data: {e}")
