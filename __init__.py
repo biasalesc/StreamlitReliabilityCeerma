@@ -1,2 +1,2 @@
-import _version
-__version__ = _version.get_versions()['version']
+import gitversion
+__version__ = gitversion.get_version(lightweight=True)

@@ -8,7 +8,11 @@ def check_authentication(
     ):
     authorized = False
 
-    params = st.experimental_get_query_params()
+    # Older streamlit versions
+    # params = st.experimental_get_query_params()
+    # Newer streamlit versions
+    params = st.query_params
+
     token = params.get("token")
     if token != None:
         token = token[0]

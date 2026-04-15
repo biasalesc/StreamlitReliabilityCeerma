@@ -12,9 +12,9 @@ from __init__ import __version__
 import authentication_streamlit
 
 
-authentication_streamlit.check_authentication(
-    "Denied access. Please log in to https://ceerma.org"
-)
+# authentication_streamlit.check_authentication(
+#     "Denied access. Please log in to https://ceerma.org"
+# )
 
 
 image_ufpe = Image.open('./src/logo.png')
@@ -76,7 +76,7 @@ submodules_alt = {
 modules = {
     "Select a module": lambda: None,
     "Parametric Models": submodules_parametric,
-    "Fit Distribution": show_fitter,
+    "Fit Distribution": show_fitter.show,
     "Accelerated Life Testing": submodules_alt,
     "Reliability Demonstration Tests": show_rdt.show,
     "Repairable Systems": show_repairable.show,
