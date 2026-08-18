@@ -12,9 +12,9 @@ from __init__ import __version__
 import authentication_streamlit
 
 
-authentication_streamlit.check_authentication(
-    "Denied access. Please log in to https://ceerma.org"
-)
+# authentication_streamlit.check_authentication(
+#     "Denied access. Please log in to https://ceerma.org"
+# )
 
 
 image_ufpe = Image.open('./src/logo.png')

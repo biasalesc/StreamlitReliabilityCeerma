@@ -280,7 +280,7 @@ def show():
                                          type="xlsx",
                                          accept_multiple_files=False,
                                          label_visibility="collapsed")
-    
+
     if 'detected_censoring_type' not in st.session_state:
         st.session_state.detected_censoring_type = None
     if 'df_columns_for_detection' not in st.session_state:
@@ -294,7 +294,7 @@ def show():
 
 
             header_based_detection = detect_censoring_from_headers(df_columns)
-            st.session_state.detected_censoring_type = header_based_detection 
+            st.session_state.detected_censoring_type = header_based_detection
 
             if header_based_detection == "time_type_format":
                 df_full = pd.read_excel(uploaded_file, header=0 if st.checkbox("File has header row", True) else None)
@@ -303,7 +303,7 @@ def show():
                     if str(col).strip().lower().replace(" ", "_") == "type":
                         type_col_name = col
                         break
-                
+
                 if type_col_name and type_col_name in df_full.columns:
                     if df_full[type_col_name].astype(str).str.upper().str.contains('L').any():
                         st.session_state.final_censoring_type = "left"
@@ -395,7 +395,7 @@ def show():
                         "Data format" example!')
                 st.stop()
             else:
-                col2_2.dataframe(df, use_container_width=True)
+                col2_2.dataframe(df, width="stretch")
                 df.iloc[:,1] = df.iloc[:,1].str.upper()
                 fdata = df[df.iloc[:,1] == 'F']
                 cdata = df[df.iloc[:,1] == 'C']
@@ -457,7 +457,7 @@ def show():
             if not uploaded_file:
                 st.error('Please upload a file first!')
                 st.stop()
-            
+
             with st.spinner('Fitting models...'):
                 terminal_buffer = StringIO()
                 print_results = False
@@ -505,26 +505,26 @@ def show():
                     return warnings
                 with contextlib.redirect_stderr(terminal_buffer), \
                     contextlib.redirect_stdout(terminal_buffer):
-                    
+
                     for item in include:
                         try:
                             res = distr[item](*function_parameters)
-                            
+
                         except Exception as e:
                             model_warnings[item] = f"Erro crítico: {str(e)}"
                             continue
 
                 terminal_warnings = capture_terminal_warnings()
-                
+
                 for model, message in terminal_warnings:
                     model_warnings[model] = message
 
-            
+
                 for item in include:
-                    
+
                     res = distr[item](*function_parameters)
 
-                            
+
                     results = results.append(
                         {
                             "ALT_model": item,
@@ -576,32 +576,32 @@ def show():
                 col1, col2 = st.columns(2)
                 col1.write(probability_plot)
                 col2.write(life_stress_plot)
-                            
+
                 if use_level and hasattr(best_model, 'mean_life'):
                     st.write('# Use level analysis')
                     st.write(f'The mean life at use level {use_level} is **{best_model.mean_life:.4f}** time units.')
 
-                    
+
                     # if hasattr(best_model, 'change_of_parameters') and 'acceleration factor' in best_model.change_of_parameters.columns:
                     #     st.subheader("Acceleration Factor Analysis")
-                        
+
                     #     change_df = best_model.change_of_parameters.copy()
                     #     if pd.api.types.is_string_dtype(change_df['acceleration factor']):
                     #         change_df['acceleration factor'] = pd.to_numeric(change_df['acceleration factor'], errors='coerce')
                     #     change_df.dropna(subset=['acceleration factor'], inplace=True)
 
                     #     if not change_df.empty:
-                        
+
                     #         stress_cols_in_df = [col for col in change_df.columns if 'stress' in col.lower() and 'life-stress model' not in col.lower() and 'at use stress' not in col.lower()]
-                            
-                    #         if not stress_cols_in_df and 'stress' in change_df.columns: 
+
+                    #         if not stress_cols_in_df and 'stress' in change_df.columns:
                     #             stress_cols_in_df = ['stress']
-                    #         elif not stress_cols_in_df: # 
+                    #         elif not stress_cols_in_df: #
                     #             st.caption("Could not identify stress column(s) in DataFrame 'change_of_parameters' for detailed display.")
 
                     #         cols_to_display = stress_cols_in_df + ['acceleration factor']
-                            
-                        
+
+
                     #         valid_cols_to_display = [col for col in cols_to_display if col in change_df.columns]
 
                     #         if valid_cols_to_display:
@@ -616,12 +616,12 @@ def show():
                     #         avg_accel = change_df['acceleration factor'].mean()
                     #         metrics_data.append({"Metric": "Average Acceleration Factor", "Value": f"{avg_accel:.2f}x"})
 
-                            
+
                     #         if not change_df['acceleration factor'].empty:
                     #             max_accel_factor = change_df['acceleration factor'].max()
                     #             stress_at_max_accel_series = change_df.loc[change_df['acceleration factor'].idxmax(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
-                                
-                        
+
+
                     #             if not stress_at_max_accel_series.empty:
                     #                 stress_at_max_accel_str = '; '.join(stress_at_max_accel_series.astype(str))
                     #                 metrics_data.append({
@@ -638,7 +638,7 @@ def show():
                     #         if not change_df['acceleration factor'].empty:
                     #             min_accel_factor = change_df['acceleration factor'].min()
                     #             stress_at_min_accel_series = change_df.loc[change_df['acceleration factor'].idxmin(), [col for col in valid_cols_to_display if col != 'acceleration factor']]
-                                
+
                     #             if not stress_at_min_accel_series.empty:
                     #                 stress_at_min_accel_str = '; '.join(stress_at_min_accel_series.astype(str))
                     #                 metrics_data.append({
@@ -651,7 +651,7 @@ def show():
                     #                 "Value": f"{min_accel_factor:.2f}x"
                     #                 })
 
-                    #         num_stress_levels = len(change_df) 
+                    #         num_stress_levels = len(change_df)
                     #         metrics_data.append({"Metric": "Number of Stress Levels with Acceleration Factor", "Value": num_stress_levels})
 
                     #         if metrics_data:
@@ -664,13 +664,13 @@ def show():
 
                     #     elif hasattr(best_model, 'change_of_parameters'):
                     #         st.info("The 'acceleration factor' column was not found in the 'change_of_parameters' DataFrame. Acceleration factor analysis is not available.")
-        
+
                     if hasattr(best_model, 'distribution_at_use_stress'):
                         st.write(f"""
                         #### Distribution at Use Stress Level
                         Characteristics of the best distribution at use conditions:
                         """)
-                        
+
                         dist = best_model.distribution_at_use_stress
                         try:
                             plot_params = functions.plot_parameters()
@@ -681,8 +681,8 @@ def show():
                                 )
                         except Exception as e:
                             st.warning(f"Could not plot distribution: {str(e)}")
-                    
-    
+
+
     if st.session_state.final_censoring_type == "left":
         with st.expander('Short Guide'):
             st.write('When using this module, please take into consideration the following points:')
@@ -744,14 +744,14 @@ def show():
             The instantaneous hazard function $h(t_i)$ at failure time $t_i$ can be thought of as the conditional "probability" of failure at $t_i$, given that it survived until $t_i$.
             """)
             st.markdown("---")
-        
+
         df_lifelines = None
         dual_stress_model = False
         stress_cols = []
 
         if uploaded_file:
             df_input = pd.read_excel(uploaded_file)
-            
+
             n_cols = len(df_input.columns)
             if n_cols < 3 or n_cols > 4:
                 st.error('Invalid number of columns. Expected 3 or 4 columns: Time, Type, Stress1, [Stress2].')
@@ -761,21 +761,21 @@ def show():
             base_names = ['Time', 'Type', 'Stress1']
             for i, name in enumerate(base_names):
                 col_names_map[df_input.columns[i]] = name
-            
+
             if n_cols == 4:
                 col_names_map[df_input.columns[3]] = 'Stress2'
                 dual_stress_model = True
                 stress_cols = ['Stress1', 'Stress2']
             else:
                 stress_cols = ['Stress1']
-            
+
             df_input.rename(columns=col_names_map, inplace=True)
-            col2_2.dataframe(df_input, use_container_width=True)
+            col2_2.dataframe(df_input, width="stretch")
 
             df_lifelines = df_input.copy()
-            
+
             type_mapping = {'F': 1, 'C': 0, 'L': -1}
-            df_lifelines['Type'] = df_lifelines['Type'].astype(str).str.upper() 
+            df_lifelines['Type'] = df_lifelines['Type'].astype(str).str.upper()
             if not all(item in type_mapping for item in df_lifelines['Type'].unique()):
                 st.error(f"Invalid values in 'Type' column. Allowed values are 'F', 'C', 'L'. Found: {df_lifelines['Type'].unique()}")
                 st.stop()
@@ -792,23 +792,23 @@ def show():
             if df_lifelines[['Time', 'Event'] + stress_cols].isnull().any().any():
                 st.error("Data contains NaN values after processing. Please check your input file, especially the 'Type' column and numeric conversions.")
                 st.stop()
-            
+
             st.markdown("---")
             st.subheader("Raw Data Timeline Visualization")
             if not df_lifelines.empty:
                 fig_timeline, ax_timeline = plt.subplots(figsize=(10, max(4, len(df_lifelines) * 0.2)))
-                
+
                 durations_plot = df_lifelines['Time']
                 event_observed_plot = (df_lifelines['Event'] == 1) # True para 'F', False para 'C' e 'L'
 
-                plot_lifetimes(durations=durations_plot, 
-                            event_observed=event_observed_plot, 
+                plot_lifetimes(durations=durations_plot,
+                            event_observed=event_observed_plot,
                             ax=ax_timeline)
-                
+
                 ax_timeline.set_xlabel("Time")
                 ax_timeline.set_ylabel("Individual Observation")
                 ax_timeline.set_title("Timeline of Individual Observations")
-                plt.tight_layout() 
+                plt.tight_layout()
                 st.pyplot(fig_timeline)
                 st.caption("""
                 **Timeline Graph Interpretation:**
@@ -822,7 +822,7 @@ def show():
             else:
                 st.info("No data available to display timeline.")
             st.markdown("---")
-            
+
             use_level_input = st.text_input("Use level stress (optional, for AFT/CoxPH predictions)")
             use_level_stresses = None
             if use_level_input:
@@ -856,7 +856,7 @@ def show():
 
             with st.spinner('Fitting models...'):
                 st.write("## Fitting Results")
-                
+
                 all_results_summary = []
                 best_model_instance = None
                 best_model_name = ""
@@ -882,7 +882,7 @@ def show():
                             st.write("Survival function estimates:")
                             st.dataframe(fitter.survival_function_)
                             all_results_summary.append({
-                                "Model": model_name, "AIC": "N/A", "Log-Likelihood": "N/A", 
+                                "Model": model_name, "AIC": "N/A", "Log-Likelihood": "N/A",
                                 "Converged": "N/A", "Parameters": "N/A (Non-parametric)"
                             })
 
@@ -892,17 +892,17 @@ def show():
 
                             if not stress_cols:
                                 st.warning("CoxPH: No stress covariates identified. Model will estimate baseline hazard only using spline method.")
-                            
+
                             fitter.fit_left_censoring(df_cox_fit, 'Time', 'Event')
-                            
+
                             fitter.print_summary(decimals=4)
                             summary_df = fitter.summary
                             st.dataframe(summary_df)
-                            
+
                             log_lik = fitter.log_likelihood_ if hasattr(fitter, 'log_likelihood_') else 'N/A'
                             aic_val = fitter.AIC_ if hasattr(fitter, 'AIC_') else 'N/A'
                             converged = fitter.convergence_flags_['converged'] if hasattr(fitter, 'convergence_flags_') and fitter.convergence_flags_ else 'N/A'
-                            
+
                             all_results_summary.append({
                                 "Model": model_name, "AIC": f"{aic_val:.2f}" if isinstance(aic_val, float) else aic_val,
                                 "Log-Likelihood": f"{log_lik:.2f}" if isinstance(log_lik, float) else log_lik,
@@ -925,7 +925,7 @@ def show():
                                     st.warning(f"Could not plot predicted survival for CoxPH at use level: {plot_e}. Plotting baseline.")
                                     fitter.plot_baseline_survival(ax=ax)
                                     ax.set_title(f"CoxPH Baseline Survival Function")
-                            elif stress_cols: 
+                            elif stress_cols:
                                 X_mean_cox = df_lifelines[stress_cols].mean().to_frame().T
                                 try:
                                     sf_prediction_mean = fitter.predict_survival_function(X_mean_cox)
@@ -935,7 +935,7 @@ def show():
                                     st.warning(f"Could not plot predicted survival for CoxPH at avg stress: {plot_e}. Plotting baseline.")
                                     fitter.plot_baseline_survival(ax=ax)
                                     ax.set_title(f"CoxPH Baseline Survival Function")
-                            else: 
+                            else:
                                 fitter.plot_baseline_survival(ax=ax)
                                 ax.set_title(f"CoxPH Baseline Survival Function")
                             st.pyplot(fig)
@@ -950,7 +950,7 @@ def show():
                             else:
                                 formula = " + ".join(stress_cols)
                                 fitter.fit(df_aft_fit, 'Time', 'Event', formula=formula)
-                            
+
                             fitter.print_summary(decimals=4)
                             summary_df = fitter.summary
                             st.dataframe(summary_df)
@@ -963,7 +963,7 @@ def show():
                                 if fitter._CONVERGENCE_FLAG_KEY in fitter.convergence_flags_:
                                     converged_status = fitter.convergence_flags_[fitter._CONVERGENCE_FLAG_KEY]
                                 elif hasattr(fitter, 'params_'):
-                                    converged_status = True 
+                                    converged_status = True
                             elif hasattr(fitter, 'params_'):
                                 converged_status = True
 
@@ -978,7 +978,7 @@ def show():
                                 best_aic = aic_val
                                 best_model_instance = fitter
                                 best_model_name = model_name
-                            
+
                             # Plotting for AFT
                             fig, ax = plt.subplots()
                             if stress_cols and use_level_stresses:
@@ -989,7 +989,7 @@ def show():
                                 X_mean_aft = df_lifelines[stress_cols].mean().to_frame().T
                                 fitter.predict_survival_function(X_mean_aft).rename(columns={0: "Avg Stress"}).plot(ax=ax)
                                 ax.set_title(f"{model_name} Survival Function (Avg Stress)")
-                            else: 
+                            else:
                                 fitter.plot_survival_function(ax=ax)
                                 ax.set_title(f"{model_name} Survival Function (No Covariates)")
                             st.pyplot(fig)
@@ -1020,7 +1020,7 @@ def show():
                         #st.dataframe(best_model_instance.summary)
 
                         if use_level_stresses and hasattr(best_model_instance, 'predict_median') and stress_cols:
-                            if "AFT" in best_model_name or "CoxPH" in best_model_name : 
+                            if "AFT" in best_model_name or "CoxPH" in best_model_name :
                                 df_predict_use_level = pd.DataFrame([use_level_stresses], columns=stress_cols)
                                 try:
                                     median_life_prediction = best_model_instance.predict_median(df_predict_use_level)
@@ -1032,10 +1032,10 @@ def show():
                                         actual_median_life_value = median_life_prediction
                                     else:
                                         st.warning(f"Unexpected type for median life prediction: {type(median_life_prediction)}")
-                                    
+
                                     if actual_median_life_value is not None:
                                         st.write(f"Predicted Median Life at Use Level {use_level_stresses}: **{actual_median_life_value:.2f}** time units.")
-                                
+
                                 except Exception as e:
                                     st.warning(f"Could not predict for use level with best model. Error: {e}")
                         elif use_level_stresses and not stress_cols and hasattr(best_model_instance, 'predict_median'):
@@ -1048,7 +1048,7 @@ def show():
                         st.warning("No models were successfully fitted or no suitable best model found.")
                 else:
                     st.info("No models were selected or processed.")
-    
+
     if st.session_state.final_censoring_type == "interval":
         with st.expander('Short Guide'):
             st.write('When using this module, please take into consideration the following points:')
@@ -1106,7 +1106,7 @@ def show():
                 stress_cols.append('Stress2')
 
             df_lifelines = df_input.rename(columns=col_map)
-            col2_2.dataframe(df_lifelines.head(), use_container_width=True)
+            col2_2.dataframe(df_lifelines.head(), width="stretch")
 
             try:
                 df_lifelines['Event'] = pd.to_numeric(df_lifelines['Event'], errors='coerce')
@@ -1260,7 +1260,7 @@ def show():
                 for model_name in selected_models:
                     st.subheader(f"Model: {model_name}")
                     fitter_class = LIFELINES_MODELS[model_name]
-                    fitter = None 
+                    fitter = None
 
                     try:
                         essential_cols_km = ['Time_Lower', 'Time_Upper', 'Event_Turnbull']
@@ -1285,18 +1285,18 @@ def show():
 
 
                             survival_df_km_interval = fitter.survival_function_
-                            
+
                             if 'NPMLE_estimate_lower' in survival_df_km_interval.columns and \
                                'NPMLE_estimate_upper' in survival_df_km_interval.columns:
-                                
-                                ax.step(survival_df_km_interval.index, survival_df_km_interval['NPMLE_estimate_upper'], 
-                                where='post', label='Upper Limit of Estimate (NPMLE)', color='blue', alpha=0.7) 
-                                ax.step(survival_df_km_interval.index, survival_df_km_interval['NPMLE_estimate_lower'], 
-                                where='post', label='Lower Limit of Estimation (NPMLE)', color='green', alpha=0.7) 
 
-                                ax.fill_between(survival_df_km_interval.index, 
-                                survival_df_km_interval['NPMLE_estimate_lower'], 
-                                survival_df_km_interval['NPMLE_estimate_upper'], 
+                                ax.step(survival_df_km_interval.index, survival_df_km_interval['NPMLE_estimate_upper'],
+                                where='post', label='Upper Limit of Estimate (NPMLE)', color='blue', alpha=0.7)
+                                ax.step(survival_df_km_interval.index, survival_df_km_interval['NPMLE_estimate_lower'],
+                                where='post', label='Lower Limit of Estimation (NPMLE)', color='green', alpha=0.7)
+
+                                ax.fill_between(survival_df_km_interval.index,
+                                survival_df_km_interval['NPMLE_estimate_lower'],
+                                survival_df_km_interval['NPMLE_estimate_upper'],
                                 step='post', alpha=0.2, color='gray',
                                 label=f'Confidence Interval ({100*(1-fitter.alpha):.0f}%)')
 
@@ -1311,11 +1311,11 @@ def show():
                                 ax.set_title(f"Kaplan-Meier")
                                 st.pyplot(fig)
 
-                            st.write("The estimated median time to event:") 
-                            st.write( fitter.median_survival_time_) 
+                            st.write("The estimated median time to event:")
+                            st.write( fitter.median_survival_time_)
 
                         elif "CoxPH" in model_name:
-                            current_cox_args = { 
+                            current_cox_args = {
                                 'alpha': cox_params_user.get('alpha', 0.95),
                                 'penalizer': cox_params_user.get('penalizer', 0.0),
                                 'baseline_estimation_method': cox_params_user.get('baseline_estimation_method', 'spline')
@@ -1336,7 +1336,7 @@ def show():
                                 fitter.print_summary(decimals=4); summary_df = fitter.summary; st.dataframe(summary_df)
                                 log_lik = fitter.log_likelihood_; aic_val = fitter.AIC_
                                 converged_status_cox = getattr(fitter, 'convergence_flags_', {}).get('converged', True)
-                                
+
                                 median_cox_val_str = "N/A"
                                 if stress_cols and use_level_stresses:
                                     df_pred_cox = pd.DataFrame([use_level_stresses], columns=stress_cols)
@@ -1356,10 +1356,10 @@ def show():
 
                                 all_results_summary.append({"Model": model_name, "AIC": f"{aic_val:.2f}", "Log-Likelihood": f"{log_lik:.2f}", "Converged": converged_status_cox, "Median Survival": median_cox_val_str})
                                 if converged_status_cox is True:
-                                    fig_cox, ax_cox = plt.subplots() 
-                                    
-                                    plot_title_cox = f"CoxPH Survival" 
-                                    prediction_context_cox = "" 
+                                    fig_cox, ax_cox = plt.subplots()
+
+                                    plot_title_cox = f"CoxPH Survival"
+                                    prediction_context_cox = ""
 
                                     if stress_cols and use_level_stresses:
                                         df_use_level_cox = pd.DataFrame([use_level_stresses], columns=stress_cols)
@@ -1375,9 +1375,9 @@ def show():
                                             else:
                                                 ax_cox.text(0.5, 0.5, "Baseline survival not available for plotting.", horizontalalignment='center', verticalalignment='center', transform=ax_cox.transAxes)
                                                 prediction_context_cox = "(Plotting Error)"
-                                    elif stress_cols: 
+                                    elif stress_cols:
                                         df_mean_stress_cox = df_fit_cox[stress_cols].mean().to_frame().T
-                                        if not df_mean_stress_cox.isnull().values.any(): 
+                                        if not df_mean_stress_cox.isnull().values.any():
                                             try:
                                                 survival_function_mean = fitter.predict_survival_function(df_mean_stress_cox)
                                                 survival_function_mean.iloc[:, 0].rename("Avg Stress").plot(ax=ax_cox)
@@ -1390,7 +1390,7 @@ def show():
                                                 else:
                                                     ax_cox.text(0.5, 0.5, "Baseline survival not available for plotting.", horizontalalignment='center', verticalalignment='center', transform=ax_cox.transAxes)
                                                     prediction_context_cox = "(Plotting Error)"
-                                        else: 
+                                        else:
                                             st.caption("Plotting baseline survival for CoxPH as average stress could not be determined.")
                                             if hasattr(fitter, 'baseline_survival_'):
                                                 fitter.plot_baseline_survival(ax=ax_cox)
@@ -1398,14 +1398,14 @@ def show():
                                             else:
                                                 ax_cox.text(0.5, 0.5, "Baseline survival not available for plotting.", horizontalalignment='center', verticalalignment='center', transform=ax_cox.transAxes)
                                                 prediction_context_cox = "(Plotting Error)"
-                                    else: 
+                                    else:
                                         if hasattr(fitter, 'baseline_survival_'):
                                             fitter.plot_baseline_survival(ax=ax_cox)
                                             prediction_context_cox = "(Baseline Survival)"
-                                        else: 
+                                        else:
                                             ax_cox.text(0.5, 0.5, "Baseline survival not available for plotting.", horizontalalignment='center', verticalalignment='center', transform=ax_cox.transAxes)
                                             prediction_context_cox = "(Plotting Error)"
-                                    
+
                                     ax_cox.set_title(f"{plot_title_cox} {prediction_context_cox}")
                                     ax_cox.set_xlabel("Time")
                                     ax_cox.set_ylabel("Survival Probability S(t)")
@@ -1414,7 +1414,7 @@ def show():
                                     st.caption("Plotting skipped for CoxPH model as it did not converge or an error occurred during fitting.")
 
                             except ConvergenceError:
-                                st.error(f"The {model_name} model did not converge.") 
+                                st.error(f"The {model_name} model did not converge.")
                                 all_results_summary.append({"Model": model_name, "AIC": "Convergence Error", "Log-Likelihood": "Convergence Error", "Converged": False, "Median Survival": "N/A"})
                                 explain_convergence_error()
 
@@ -1425,14 +1425,14 @@ def show():
                                 st.warning(f"AFT ({model_name}): Data empty. Skipping.")
                                 all_results_summary.append({"Model": model_name, "AIC": "Data insufficient", "Log-Likelihood": "Data insufficient", "Converged": "N/A", "Median Survival": "N/A", "MTTF": "N/A"})
                                 continue
-                            
+
                             try:
                                 if not stress_cols:
                                     fitter.fit_interval_censoring(durations=(df_fit_aft['Time_Lower'], df_fit_aft['Time_Upper']), event_observed=df_fit_aft['Event_AFT_IntervalCensoring'])
                                 else:
                                     formula = " + ".join(stress_cols)
                                     fitter.fit_interval_censoring(df_fit_aft, 'Time_Lower', 'Time_Upper', event_col='Event_AFT_IntervalCensoring', formula=formula)
-                                
+
                                 st.success(f"{model_name} fitted successfully!")
                                 fitter.print_summary(decimals=4); summary_df = fitter.summary; st.dataframe(summary_df)
                                 log_lik = fitter.log_likelihood_; aic_val = fitter.AIC_
@@ -1454,13 +1454,13 @@ def show():
                                         df_mean_stress_aft = df_fit_aft[stress_cols].mean().to_frame().T
                                         if not df_mean_stress_aft.isnull().values.any():
                                             df_for_prediction_aft = df_mean_stress_aft
-                                
-                                percentile_predictions_list = [] 
+
+                                percentile_predictions_list = []
                                 if hasattr(fitter, 'predict_percentile'):
                                     st.write(f"**Predicted Percentiles for {model_name} ({prediction_label_aft}):**")
                                     for p_aft in percentiles_to_predict:
                                         percentile_label = f"B{p_aft*100:.0f} (Percentile {p_aft*100:.0f}%)"
-                                        display_val_aft = "Forecast Error" 
+                                        display_val_aft = "Forecast Error"
                                         try:
                                             pred_val_aft = fitter.predict_percentile(
                                                 df_for_prediction_aft, p=p_aft
@@ -1468,34 +1468,34 @@ def show():
 
                                             if isinstance(pred_val_aft, (pd.Series, pd.DataFrame)):
                                                 numeric_val_aft = pred_val_aft.iloc[0,0] if isinstance(pred_val_aft, pd.DataFrame) else pred_val_aft.iloc[0]
-                                            elif isinstance(pred_val_aft, (np.ndarray)) and pred_val_aft.ndim > 0: 
+                                            elif isinstance(pred_val_aft, (np.ndarray)) and pred_val_aft.ndim > 0:
                                                 numeric_val_aft = pred_val_aft.item(0) if pred_val_aft.size == 1 else pred_val_aft[0]
-                                            else: 
+                                            else:
                                                 numeric_val_aft = pred_val_aft
 
-                 
-                                            if not pd.isna(numeric_val_aft): 
+
+                                            if not pd.isna(numeric_val_aft):
                                                 display_val_aft = f"{numeric_val_aft:.2f}"
-                                                if p_aft == 0.50: 
-                                                    median_aft_val_str = display_val_aft 
+                                                if p_aft == 0.50:
+                                                    median_aft_val_str = display_val_aft
                                             else:
-                                                display_val_aft = "NaN" 
+                                                display_val_aft = "NaN"
 
                                         except Exception as e_perc:
                                             st.caption(f"Error calculating {percentile_label}: {e_perc}")
-                                        
+
                                         percentile_predictions_list.append({
                                             "Percentile (Life B)": percentile_label,
                                             "Estimated Time": display_val_aft
                                         })
-                                    
+
                                     if percentile_predictions_list:
                                         percentiles_df = pd.DataFrame(percentile_predictions_list)
-                                        st.table(percentiles_df.set_index("Percentile (Life B)")) 
-             
+                                        st.table(percentiles_df.set_index("Percentile (Life B)"))
+
                                     else:
                                         st.caption("No percentile could be predicted.")
-                                
+
                                 if hasattr(fitter, 'predict_expectation'):
                                     try:
                                         expected_life_aft = fitter.predict_expectation(df_for_prediction_aft) if df_for_prediction_aft is not None else fitter.predict_expectation()
@@ -1508,10 +1508,10 @@ def show():
                                     except Exception:
                                         mttf_aft_val_str = "Error"
                                         st.write(f"Could not calculate Expected Life for {model_name} ({prediction_label_aft}).")
-                                elif "LogLogistic" in model_name: 
+                                elif "LogLogistic" in model_name:
                                     mttf_aft_val_str = "May not be defined"
                                     st.write(f"Predicted MTTF for {model_name} ({prediction_label_aft}): May not be defined or directly computable for certain LogLogistic parameters.")
-                                
+
                                 all_results_summary.append({"Model": model_name, "AIC": f"{aic_val:.2f}", "Log-Likelihood": f"{log_lik:.2f}", "Converged": converged_status_aft, "Median Survival": median_aft_val_str, "MTTF": mttf_aft_val_str})
 
                             except ConvergenceError:
@@ -1539,7 +1539,7 @@ def show():
 
                     results_df = pd.DataFrame(all_results_summary)
                     best_aic_val = np.inf
-                    best_ll_val = -np.inf 
+                    best_ll_val = -np.inf
                     best_model_name_summary_aic = "N/A"
                     best_model_name_summary_ll = "N/A"
                     valid_results_for_best = []
@@ -1549,7 +1549,7 @@ def show():
                         is_converged = False
                         if isinstance(converged_val, bool): is_converged = converged_val
                         elif isinstance(converged_val, str) and converged_val.lower() not in ["n/a", "error", "data insufficient", "convergence error"]:
-                            try: is_converged = bool(converged_val) 
+                            try: is_converged = bool(converged_val)
                             except: pass
 
                         if is_converged:
@@ -1558,12 +1558,12 @@ def show():
                                 ll = float(r_row.get("Log-Likelihood", np.nan))
                                 if not np.isnan(aic):
                                     valid_results_for_best.append({
-                                        "Model": r_row["Model"], 
-                                        "AIC_float": aic, 
+                                        "Model": r_row["Model"],
+                                        "AIC_float": aic,
                                         "LL_float": ll if not np.isnan(ll) else -np.inf
                                     })
                             except: continue
-                    
+
                     results_df["Is Best (AIC)"] = ""
                     results_df["Is Best (LogLik)"] = ""
 
@@ -1581,7 +1581,7 @@ def show():
                                 best_model_name_summary_ll = sorted_by_ll[0]["Model"]
                                 best_ll_val = sorted_by_ll[0]["LL_float"]
                                 results_df.loc[results_df["Model"] == best_model_name_summary_ll, "Is Best (LogLik)"] = "🌟"
-                    
+
                     st.dataframe(results_df)
 
                     if best_model_name_summary_aic != "N/A":

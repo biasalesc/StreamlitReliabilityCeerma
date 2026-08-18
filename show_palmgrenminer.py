@@ -40,7 +40,7 @@ def palmgren_miner_linear_damage(rated_life, time_at_stress, stress):
     })
 
     st.write("""**1. Component life summary**""")
-    st.dataframe(main_df.set_index("Description"), use_container_width=True)
+    st.dataframe(main_df.set_index("Description"), width="stretch")
 
     stress_damage_df = pd.DataFrame({
         "Stress": stress,
@@ -48,7 +48,7 @@ def palmgren_miner_linear_damage(rated_life, time_at_stress, stress):
     })
 
     st.write("""**2. Damage per stress level**""")
-    st.dataframe(stress_damage_df.set_index("Stress"), use_container_width=True)
+    st.dataframe(stress_damage_df.set_index("Stress"), width="stretch")
 
 
 def show():
@@ -102,7 +102,7 @@ def show():
 
     if uploaded_file:
         df = pd.read_excel(uploaded_file, header=head)
-        col2_2.dataframe(df, use_container_width=True)
+        col2_2.dataframe(df, width="stretch")
 
         rated_life = df.iloc[:, 0].values
         time_at_stress = df.iloc[:, 1].values

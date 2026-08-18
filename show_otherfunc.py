@@ -115,7 +115,7 @@ def show():
                                       xtitle='Stress/Strength units',
                                       tick_format='0.2f',
                                       update_menus=update_menus)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         if stress.mean > strength.mean:
             st.error("Warning: strength mean must be greater \

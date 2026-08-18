@@ -120,7 +120,7 @@ def creep_rupture_curves(
             legend_title="Temperature"
         )
 
-    st.plotly_chart(fig, use_container_width=True, xaxis=dict(type="log"))
+    st.plotly_chart(fig, width="stretch", xaxis=dict(type="log"))
 
 
 def show():
@@ -205,7 +205,7 @@ def show():
                 ]}
 
             df_results = pd.DataFrame(results_creep)
-            st.dataframe(df_results.set_index("Description"), use_container_width=True)
+            st.dataframe(df_results.set_index("Description"), width="stretch")
 
     if method == 'Creep rupture plot':
         with st.expander('Short Guide'):
@@ -251,7 +251,7 @@ def show():
 
         if uploaded_file:
             df = pd.read_excel(uploaded_file, header=head)
-            col2_2.dataframe(df, use_container_width=True)
+            col2_2.dataframe(df, width="stretch")
 
             temp_array = df.iloc[:, 0].values
             stress_array = df.iloc[:, 1].values

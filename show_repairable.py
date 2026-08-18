@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as ss
 from scipy import integrate
-from reliability.Utils import colorprint, round_to_decimals
+from reliability.Utils import colorprint
 from scipy.optimize import curve_fit
 from reliability.Repairable_systems import MCF_parametric as MCF_parametric_2
 from reliability.Repairable_systems import MCF_nonparametric as MCF_nonparametric_2
@@ -132,7 +132,7 @@ class reliability_growth:
                                           update_menus=update_menus)
             fig.update_xaxes(range=[0, max(xvals)])
             fig.update_yaxes(range=[0, max(theta_i) * 1.2])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 
 class ROCOF:
@@ -351,9 +351,9 @@ class ROCOF:
                 )
                 st.write(
                     "ROCOF assuming NHPP has parameters: Beta_hat =",
-                    round_to_decimals(B, 3),
+                    functions.round_to_decimals(B, 3),
                     ", Lambda_hat =",
-                    round_to_decimals(L, 4),
+                    functions.round_to_decimals(L, 4),
                 )
             elif U > -z_crit:
                 st.write(
@@ -365,9 +365,9 @@ class ROCOF:
                 )
                 st.write(
                     "ROCOF assuming NHPP has parameters: Beta_hat =",
-                    round_to_decimals(B, 3),
+                    functions.round_to_decimals(B, 3),
                     ", Lambda_hat =",
-                    round_to_decimals(L, 4),
+                    functions.round_to_decimals(L, 4),
                 )
             else:
                 st.write(
@@ -379,7 +379,7 @@ class ROCOF:
                 )
                 st.write(
                     "ROCOF assuming HPP is",
-                    round_to_decimals(rocof, 4),
+                    functions.round_to_decimals(rocof, 4),
                     "failures per unit time.",
                 )
 
@@ -398,7 +398,7 @@ class ROCOF:
                                           ytitle='Times between failures',
                                           tick_format='0.2f',
                                           update_menus=update_menus)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 class optimal_replacement_time:
     """
@@ -511,8 +511,8 @@ class optimal_replacement_time:
             )
         self.ORT = ORT
         self.min_cost = min_cost
-        min_cost_rounded = round_to_decimals(min_cost, 2)
-        ORT_rounded = round_to_decimals(ORT, 2)
+        min_cost_rounded = functions.round_to_decimals(min_cost, 2)
+        ORT_rounded = functions.round_to_decimals(ORT, 2)
 
         if print_results is True:
             st.write("## Results from the Optimal Replacement Time analysis")
@@ -554,7 +554,7 @@ class optimal_replacement_time:
                                           update_menus=update_menus)
             fig.update_xaxes(range=[0, weibull_alpha * alpha_multiple])
             fig.update_yaxes(range=[0, min_cost * 2])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         if (
             show_ratio_plot is True
@@ -597,7 +597,7 @@ class optimal_replacement_time:
                                           update_menus=update_menus)
             fig.update_xaxes(range=[1, xupper])
             fig.update_yaxes(range=[0, self.ORT * 2])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 
 class MCF_nonparametric:
@@ -952,7 +952,7 @@ class MCF_nonparametric:
                                           update_menus=update_menus)
             fig.update_xaxes(range=[0, last_time])
             fig.update_yaxes(range=[0, max(RESULTS_upper) * 1.05])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 
 class MCF_parametric:
@@ -1196,7 +1196,7 @@ class MCF_parametric:
                                           update_menus=update_menus)
             fig.update_xaxes(range=[0, max(self.times) * 1.2])
             fig.update_yaxes(range=[0, max(self.MCF) * 1.4])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 
 def show():
@@ -1301,7 +1301,7 @@ def show():
             type="xlsx", accept_multiple_files=False)
         if uploaded_file:
             aux = pd.read_excel(uploaded_file)
-            col2_2.dataframe(aux, use_container_width=True)
+            col2_2.dataframe(aux, width="stretch")
             data = []
             for col in aux.columns:
                 cleanedList = [
@@ -1355,7 +1355,7 @@ def show():
         if uploaded_file:
             data = pd.read_excel(uploaded_file)
             if df.shape[1] == 1:
-                col2_2.dataframe(data, use_container_width=True)
+                col2_2.dataframe(data, width="stretch")
                 for col in data.columns:
                     times = np.cumsum(data[col].to_numpy())
             else:
@@ -1398,7 +1398,7 @@ def show():
         if uploaded_file:
             data = pd.read_excel(uploaded_file)
             if df.shape[1] == 1:
-                col2_2.dataframe(data, use_container_width=True)
+                col2_2.dataframe(data, width="stretch")
                 times = data.iloc[:,0].to_list()
             else:
                 st.warning('Check the data format.')

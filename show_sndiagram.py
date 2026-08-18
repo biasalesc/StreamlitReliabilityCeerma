@@ -469,9 +469,9 @@ def SN_diagram(
     # plt.subplots_adjust(
     #     top=0.9, bottom=0.135, left=0.12, right=0.93, hspace=0.2, wspace=0.2
     # )
-    # st.plotly_chart(fig, use_container_width=True, xaxis=dict(type=f"{xscale}"))
+    # st.plotly_chart(fig, width="stretch", xaxis=dict(type=f"{xscale}"))
 
-    st.plotly_chart(fig, use_container_width=True, xaxis=dict(type="log"))
+    st.plotly_chart(fig, width="stretch", xaxis=dict(type="log"))
 
 
 def show():
@@ -537,7 +537,7 @@ def show():
 
     if uploaded_file:
         df = pd.read_excel(uploaded_file, header=head)
-        col2_2.dataframe(df, use_container_width=True)
+        col2_2.dataframe(df, width="stretch")
 
         # Seleciona dados com base na posição das colunas
         type_col = df.iloc[:, 0]
@@ -611,4 +611,4 @@ def show():
             #             if 'CI' in text.get_text():
             #                 text.set_text(f'Statistical bounds ({int(CI_defined*100)}% CI)')
 
-            # st.pyplot(plt.gcf(), use_container_width=True)
+            # st.pyplot(plt.gcf(), width="stretch")

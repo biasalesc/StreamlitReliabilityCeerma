@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from reliability.Probability_plotting import plotting_positions
+from reliability.Utils import round_and_string
+
+
+def round_to_decimals(value, decimals):
+    return float(round_and_string(value, decimals))
 
 
 def write_text_align(text='Hello World!', align='justify'):
@@ -220,13 +225,13 @@ def plot_distribution(dist, plot_params, *, title='',
 
         if sidetable is not None:
             cols = st.columns([2,1])
-            cols[0].dataframe(sidetable, use_container_width=True)
+            cols[0].dataframe(sidetable, width="stretch")
             # cols[1].write(properties_text)
-            cols[1].dataframe(properties_table, use_container_width=True)
+            cols[1].dataframe(properties_table, width="stretch")
         else:
             cols = st.columns([1])
             # cols[0].write(properties_text)
-            cols[0].dataframe(properties_table, use_container_width=True)
+            cols[0].dataframe(properties_table, width="stretch")
 
     if plot:
         # Points of X axis
@@ -345,7 +350,7 @@ def plot_distribution(dist, plot_params, *, title='',
                             tick_format=tick_format,
                             update_menus=plot_params['display_log_options'])
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 
 def update_layout(fig, *, title='', xtitle='',

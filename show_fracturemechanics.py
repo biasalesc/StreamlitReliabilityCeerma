@@ -361,7 +361,7 @@ class fracture_mechanics_crack_growth:
                 yaxis=dict(range=[0, max(a_crit_array) * 1.2]),
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 def show():
     st.write("""
@@ -499,7 +499,7 @@ def show():
             }
 
             df_results = pd.DataFrame(results_crack_initiation)
-            st.dataframe(df_results.set_index("Description"), use_container_width=True)
+            st.dataframe(df_results.set_index("Description"), width="stretch")
 
     if method == 'Crack growth':
         with st.expander('Short Guide'):
@@ -621,7 +621,7 @@ def show():
                 round(fm_cg.Nf_total_simplified, 2),
                 round(fm_cg.final_crack_length_simplified, 2),
             ]})
-            st.dataframe(results_simplified.set_index("Description"), use_container_width=True)
+            st.dataframe(results_simplified.set_index("Description"), width="stretch")
 
             st.write(r"**2. Iterative method (recalculating $f(g)$, $S_{\text{max}}$, and $a_{\text{crit}}$ for each cycle):**")
 
@@ -641,7 +641,7 @@ def show():
                 round(fm_cg.Nf_total_iterative, 2),
                 round(fm_cg.final_crack_length_iterative, 2),
             ]})
-            st.dataframe(results_iterative.set_index("Description"), use_container_width=True)
+            st.dataframe(results_iterative.set_index("Description"), width="stretch")
 
             fracture_mechanics_crack_growth(Kc, C, m, P, W, t, Kt,
                                                     a_initial, D, a_final, crack_type,

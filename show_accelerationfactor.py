@@ -85,4 +85,4 @@ def show():
             ]}
 
         df_results = pd.DataFrame(results_AF)
-        st.dataframe(df_results.set_index("Description"), use_container_width=True)
+        st.dataframe(df_results.set_index("Description"), width="stretch")

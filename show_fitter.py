@@ -42,7 +42,7 @@ def show():
             delete_cols = list(range(first_string_col_index-1))
             df = df.drop(df.columns[delete_cols], axis=1)
 
-        col2_2.dataframe(df, use_container_width=True)
+        col2_2.dataframe(df, width="stretch")
         df.iloc[:,1] = df.iloc[:,1].str.upper()
         fdata = df[df.iloc[:,1] == 'F']
         cdata = df[df.iloc[:,1] == 'C']
@@ -119,15 +119,14 @@ def show():
 
             st.write('### Results of all fitted distributions')
             results_table = results.results.set_index('Distribution')
-            results_table = results_table.mask(results_table=='').astype(float)
-            results_table = results_table.fillna('')
+            results_table = results_table.fillna('').astype(object)
             for i in range(len(results_table.iloc[:,0])):
                 for j in range(len(results_table.iloc[0,:])):
                     try:
                         results_table.iloc[i,j] = f'{results_table.iloc[i,j]:.{plot_params["decimals"]}f}'
                     except ValueError:
-                        results_table.iloc[i,j] = ''
-            st.dataframe(results_table, use_container_width=True)
+                        pass
+            st.dataframe(results_table, width="stretch")
 
             dist = results.best_distribution
             distribution_name = results.best_distribution_name
