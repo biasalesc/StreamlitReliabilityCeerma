@@ -72,6 +72,13 @@ def show():
                 if fitdis[:4] in dis:
                     exc.append(fitdis)
 
+        # Weibull_Mixture / Weibull_CR / Weibull_DS are always fitted by
+        # Fit_Everything by default but aren't supported by fit_distributions
+        # (see distributions.unsupported_distributions) - exclude them
+        # unconditionally so they can never be selected as "best" and crash
+        # the lookup below with a KeyError.
+        exc.extend(distributions.unsupported_distributions)
+
     elif mod == "Non-parametric":
 
         distr = distributions.non_parametric_distributions
@@ -118,18 +125,39 @@ def show():
                                      show_probability_plot=False)
 
             st.write('### Results of all fitted distributions')
-            results_table = results.results.set_index('Distribution')
-            results_table = results_table.fillna('').astype(object)
-            for i in range(len(results_table.iloc[:,0])):
-                for j in range(len(results_table.iloc[0,:])):
-                    try:
-                        results_table.iloc[i,j] = f'{results_table.iloc[i,j]:.{plot_params["decimals"]}f}'
-                    except ValueError:
-                        pass
-            st.dataframe(results_table, width="stretch")
 
-            dist = results.best_distribution
-            distribution_name = results.best_distribution_name
+            # Fit_Everything's own sort_by='Log-likelihood' sorts by the
+            # *absolute value* of the log-likelihood in ascending order,
+            # which is wrong: a higher (less negative) log-likelihood means
+            # a better fit, not one closer to zero. That bug also drives
+            # best_distribution/best_distribution_name, so instead of
+            # trusting those we re-sort results.results ourselves with the
+            # correct direction for whichever metric was chosen and pick the
+            # top row as the best fit.
+            sort_columns = {
+                'BIC': ('BIC', True),
+                'AICC': ('AICc', True),
+                'AIC': ('AICc', True),
+                'AD': ('AD', True),
+                'LOG-LIKELIHOOD': ('Log-likelihood', False),
+            }
+            sort_col, ascending = sort_columns.get(metric.upper(), ('BIC', True))
+            sort_key = pd.to_numeric(results.results[sort_col], errors='coerce')
+            results_sorted = (
+                results.results.assign(_sort_key=sort_key)
+                .sort_values(by='_sort_key', ascending=ascending, na_position='last')
+                .drop(columns='_sort_key')
+            )
+
+            results_table = results_sorted.set_index('Distribution')
+            numeric_cols = results_table.select_dtypes(include='number').columns
+            column_config = {
+                col: st.column_config.NumberColumn(format=f'%.{plot_params["decimals"]}f')
+                for col in numeric_cols
+            }
+            st.dataframe(results_table, width="stretch", column_config=column_config)
+
+            distribution_name = results_sorted['Distribution'].values[0]
             st.write(f'### Results of the best fitted distribution: {distribution_name}')
 
             percentiles = np.linspace(1, 99, num=99)
@@ -140,6 +168,10 @@ def show():
                 percentiles=percentiles, method=method,
                 CI=plot_params['confidence_interval']
             )
+            # Use the distribution fitted here (consistent with the CI table
+            # below) rather than results.best_distribution, which may still
+            # reflect Fit_Everything's own (buggy) selection.
+            dist = new_fit.distribution
 
             if 'Exponential' in distribution_name:
                 new_fit.results = new_fit.results.drop(1, axis=0)

@@ -209,6 +209,15 @@ fit_distributions = {
     'Loglogistic_3P': [Fit_Loglogistic_3P, loglogistic_info],
 }
 
+# Weibull_Mixture, Weibull_CR and Weibull_DS are composite models (they combine
+# multiple sub-distributions) that reliability.Fitters.Fit_Everything fits by
+# default. They don't fit the "one Fit_X function + one Parameter table" shape
+# assumed by fit_distributions above, so show_fitter.py cannot build the
+# best-fit follow-up (probability plot / CI table) for them and must always
+# exclude them from Fit_Everything to avoid a KeyError when one of them is
+# selected as the best fit.
+unsupported_distributions = ['Weibull_Mixture', 'Weibull_CR', 'Weibull_DS']
+
 
 non_parametric_distributions = {
     'Kaplan-Meier': KaplanMeier,
