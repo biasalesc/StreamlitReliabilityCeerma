@@ -74,14 +74,14 @@ def show():
 
             prob_failure = stress_strength_normal(stress=stress,
                                                   strength=strength,
-                                                  show_distribution_plot=False,
+                                                  show_plot=False,
                                                   print_results=False)
 
         # If not, use numerical integration method
         else:
             prob_failure = stress_strength(stress=stress,
                                            strength=strength,
-                                           show_distribution_plot=False,
+                                           show_plot=False,
                                            print_results=False)
 
         xmin = stress.quantile(0.00001)
